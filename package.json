@@ -6,6 +6,9 @@
     "type": "git",
     "url": "git+https://github.com/robinucar/careology-todo-app.git"
   },
+  "engines": {
+    "node": ">=24"
+  },
   "license": "ISC",
   "private": true,
   "workspaces": [
