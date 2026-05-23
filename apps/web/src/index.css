@@ -1,0 +1,41 @@
+:root {
+  --text: #50605a;
+  --text-strong: #12221c;
+  --bg: #f5f2e8;
+  --panel: #fffdf7;
+  --border: #ddd5c4;
+  --accent: #2f7d62;
+  --shadow: 0 24px 70px rgba(38, 50, 42, 0.14);
+  --font-body: ui-sans-serif, system-ui, sans-serif;
+
+  font: 18px/1.5 var(--font-body);
+  color: var(--text);
+  background: var(--bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+h1 {
+  margin: 0 0 20px;
+  color: var(--text-strong);
+  font-size: clamp(2.5rem, 8vw, 5.75rem);
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}

@@ -55,3 +55,29 @@ This project will include:
 - AWS RDS PostgreSQL
 - Vitest
 - Playwright
+
+## Local Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start PostgreSQL:
+
+```bash
+docker compose up -d postgres
+```
+
+Run validation checks:
+
+```bash
+npm run typecheck
+npm run lint
+npm run build
+```
+
+The local PostgreSQL database runs on port `5433`.
+
+Environment variables are documented in `.env.example`.

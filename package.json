@@ -1,0 +1,20 @@
+{
+  "name": "careology-todo-app",
+  "version": "1.0.0",
+  "description": "The goal of this project is to implement the required todo app features and the optional bonus requirements with a clean, modular, and maintainable architecture.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/robinucar/careology-todo-app.git"
+  },
+  "license": "ISC",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  }
+}
