@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: careology-todo-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: careology
+      POSTGRES_PASSWORD: careology
+      POSTGRES_DB: careology_todo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
