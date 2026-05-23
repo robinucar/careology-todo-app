@@ -1,0 +1,1 @@
+export const appName = "Careology Todo App";
