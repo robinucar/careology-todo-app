@@ -81,3 +81,18 @@ npm run build
 The local PostgreSQL database runs on port `5433`.
 
 Environment variables are documented in `.env.example`.
+
+## Database
+
+The API uses PostgreSQL with Prisma.
+
+```bash
+cp .env.example apps/api/.env
+npm run db:validate --workspace @careology/api
+npm run db:generate --workspace @careology/api
+npm run db:migrate --workspace @careology/api -- --name migration_name
+```
+
+Prisma Client is generated into `apps/api/src/generated/prisma/` and is not committed.
+
+Tasks use soft delete with `deletedAt`; API queries should always scope tasks by the authenticated user.
