@@ -21,6 +21,7 @@ const createDependencies = () => {
     .fn<AuthServiceDependencies["createUser"]>()
     .mockResolvedValue({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
     });
 
@@ -53,6 +54,7 @@ describe("registerUser", () => {
     await expect(
       registerUser(
         {
+          name: " Task Master ",
           email: " USER@example.COM ",
           password: "password123",
         },
@@ -62,6 +64,7 @@ describe("registerUser", () => {
       token: "signed-token",
       user: {
         id: "user_123",
+        name: "Task Master",
         email: "user@example.com",
       },
     });
@@ -69,6 +72,7 @@ describe("registerUser", () => {
     expect(dependencies.findUserByEmail).toHaveBeenCalledWith("user@example.com");
     expect(dependencies.hashPassword).toHaveBeenCalledWith("password123");
     expect(dependencies.createUser).toHaveBeenCalledWith({
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "hashed-password",
     });
@@ -83,6 +87,7 @@ describe("registerUser", () => {
 
     dependencies.findUserByEmail.mockResolvedValue({
       id: "existing_user",
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "existing-password-hash",
     });
@@ -90,6 +95,7 @@ describe("registerUser", () => {
     await expect(
       registerUser(
         {
+          name: "Task Master",
           email: "user@example.com",
           password: "password123",
         },
@@ -111,6 +117,7 @@ describe("registerUser", () => {
     await expect(
       registerUser(
         {
+          name: "Task Master",
           email: "not-an-email",
           password: "password123",
         },
@@ -124,6 +131,7 @@ describe("registerUser", () => {
     await expect(
       registerUser(
         {
+          name: "Task Master",
           email: "not-an-email",
           password: "password123",
         },
@@ -141,6 +149,7 @@ describe("loginUser", () => {
 
     dependencies.findUserByEmail.mockResolvedValue({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "stored-password-hash",
     });
@@ -157,6 +166,7 @@ describe("loginUser", () => {
       token: "signed-token",
       user: {
         id: "user_123",
+        name: "Task Master",
         email: "user@example.com",
       },
     });
@@ -199,6 +209,7 @@ describe("loginUser", () => {
 
     dependencies.findUserByEmail.mockResolvedValue({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "stored-password-hash",
     });

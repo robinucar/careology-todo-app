@@ -3,6 +3,7 @@ export type RegisterMutationData = {
     token: string;
     user: {
       id: string;
+      name: string;
       email: string;
     };
   };
@@ -13,6 +14,7 @@ export type LoginMutationData = {
     token: string;
     user: {
       id: string;
+      name: string;
       email: string;
     };
   };
@@ -24,6 +26,7 @@ export const REGISTER_MUTATION = `#graphql
       token
       user {
         id
+        name
         email
       }
     }
@@ -36,6 +39,7 @@ export const LOGIN_MUTATION = `#graphql
       token
       user {
         id
+        name
         email
       }
     }

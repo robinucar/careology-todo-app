@@ -10,7 +10,14 @@ const passwordSchema = z
   .string()
   .min(8, "Password must be at least 8 characters.");
 
+const nameSchema = z
+  .string()
+  .trim()
+  .min(2, "Name must be at least 2 characters.")
+  .max(80, "Name must be at most 80 characters.");
+
 export const registerInputSchema = z.object({
+  name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
 });

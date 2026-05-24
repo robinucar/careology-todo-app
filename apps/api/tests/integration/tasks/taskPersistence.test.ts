@@ -35,10 +35,12 @@ const createTestUser = async (name: string) => {
   const user = await prisma.user.create({
     data: {
       email: `${testRunId}-${name}@example.com`,
+      name,
       passwordHash: "test-password-hash",
     },
     select: {
       id: true,
+      name: true,
       email: true,
     },
   });

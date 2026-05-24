@@ -9,6 +9,7 @@ import { type AuthTokenConfig, type AuthTokenPayload } from "./token.js";
 
 type AuthUser = {
   id: string;
+  name: string;
   email: string;
 };
 
@@ -17,6 +18,7 @@ type AuthUserWithPassword = AuthUser & {
 };
 
 type CreateUserInput = {
+  name: string;
   email: string;
   passwordHash: string;
 };
@@ -73,6 +75,7 @@ const createInvalidCredentialsError = () => {
 const toAuthUser = (user: AuthUser): AuthUser => {
   return {
     id: user.id,
+    name: user.name,
     email: user.email,
   };
 };
@@ -95,6 +98,7 @@ export const registerUser = async (
   const passwordHash = await dependencies.hashPassword(registerInput.password);
 
   const user = await dependencies.createUser({
+    name: registerInput.name,
     email: registerInput.email,
     passwordHash,
   });

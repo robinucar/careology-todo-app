@@ -14,6 +14,7 @@ describe("createAuthServiceDependencies", () => {
   it("wires repository, password, and token dependencies", async () => {
     const findUnique = vi.fn().mockResolvedValue({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "stored-password-hash",
     });
@@ -37,6 +38,7 @@ describe("createAuthServiceDependencies", () => {
 
     await expect(dependencies.findUserByEmail("user@example.com")).resolves.toEqual({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "stored-password-hash",
     });
@@ -47,6 +49,7 @@ describe("createAuthServiceDependencies", () => {
       },
       select: {
         id: true,
+        name: true,
         email: true,
         passwordHash: true,
       },

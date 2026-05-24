@@ -12,6 +12,7 @@ type AuthRepository = Pick<
 
 const authUserSelect = {
   id: true,
+  name: true,
   email: true,
 } as const;
 
@@ -46,11 +47,12 @@ export const createAuthRepository = (
         select: authUserWithPasswordSelect,
       });
     },
-    createUser: async ({ email, passwordHash }) => {
+    createUser: async ({ email, name, passwordHash }) => {
       try {
         return await prismaClient.user.create({
           data: {
             email,
+            name,
             passwordHash,
           },
           select: authUserSelect,

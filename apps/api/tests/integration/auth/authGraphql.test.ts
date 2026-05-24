@@ -22,6 +22,7 @@ describe("auth GraphQL integration", () => {
         query: authGraphql.REGISTER_MUTATION,
         variables: {
           input: {
+            name: authFixtures.authFixture.nameInput,
             email: authFixtures.authFixture.emailInput,
             password: authFixtures.authFixture.password,
           },
@@ -44,6 +45,7 @@ describe("auth GraphQL integration", () => {
       },
       select: {
         id: true,
+        name: true,
         email: true,
         passwordHash: true,
       },
@@ -51,10 +53,12 @@ describe("auth GraphQL integration", () => {
     expect(user.create).toHaveBeenCalledWith({
       data: {
         email: authFixtures.authFixture.email,
+        name: authFixtures.authFixture.name,
         passwordHash: expect.stringMatching(/^\$2[aby]\$12\$/),
       },
       select: {
         id: true,
+        name: true,
         email: true,
       },
     });
@@ -145,6 +149,7 @@ describe("auth GraphQL integration", () => {
         query: authGraphql.REGISTER_MUTATION,
         variables: {
           input: {
+            name: authFixtures.authFixture.name,
             email: authFixtures.authFixture.email,
             password: authFixtures.authFixture.password,
           },
