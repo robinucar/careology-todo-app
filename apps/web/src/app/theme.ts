@@ -7,12 +7,12 @@ export const appTheme = createTheme({
       paper: '#ffffff',
     },
     primary: {
-      main: '#00c896',
+      main: '#00805F',
       contrastText: '#ffffff',
     },
     text: {
       primary: '#20262a',
-      secondary: '#707a80',
+      secondary: '#5f6870',
     },
   },
   shape: {

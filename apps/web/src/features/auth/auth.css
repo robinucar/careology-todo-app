@@ -1,0 +1,244 @@
+.auth-page {
+  min-height: 100svh;
+  padding: 38px 42px;
+  background: #ffffff;
+}
+
+.auth-page .auth-brand {
+  margin: 0;
+  color: #000;
+  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.auth-stage {
+  width: min(1220px, 100%);
+  margin: 44px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(48px, 10vw, 180px);
+}
+
+.auth-card {
+  width: min(495px, 100%);
+  min-height: 595px;
+  padding: 44px 36px;
+  border: 1px solid #babfc3;
+  border-radius: 6px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.08);
+}
+
+.auth-card .auth-welcome {
+  color: #14191c;
+  font-size: 1.55rem;
+  line-height: 1.2;
+}
+
+.auth-card .auth-title {
+  margin: 0;
+  color: #070707;
+  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-size: 31px;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.auth-card .auth-subtitle {
+  margin-top: 6px;
+  color: #14191c;
+  font-size: 1.05rem;
+}
+
+.auth-card .auth-field-label {
+  color: #000;
+  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 16px;
+}
+
+.auth-card .MuiOutlinedInput-root {
+  min-height: 49px;
+  border-radius: 4px;
+}
+
+.auth-card .MuiOutlinedInput-notchedOutline {
+  border-color: #d8dee3;
+}
+
+.auth-card .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline,
+.auth-card .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #d8dee3;
+  border-width: 1px;
+}
+
+.auth-card .MuiInputBase-input {
+  color: #5f6870;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+  padding: 12px 16px;
+}
+
+.auth-card .MuiInputBase-input::placeholder {
+  color: #5f6870;
+  opacity: 1;
+}
+
+.auth-card .MuiFormHelperText-root {
+  margin-left: 0;
+}
+
+.auth-card .MuiLink-root {
+  color: #00805F;
+  font-weight: 700;
+}
+
+.auth-switch-copy .MuiLink-root {
+  font-weight: 600;
+}
+
+.auth-password-icon {
+  display: block;
+  height: 24px;
+  width: 24px;
+}
+
+.auth-form-options,
+.auth-switch-copy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #5f6870;
+  font-size: 0.9rem;
+}
+
+.auth-switch-copy {
+  justify-content: center;
+  gap: 4px;
+}
+
+.auth-illustration {
+  width: min(360px, 32vw);
+  flex: 0 0 auto;
+  height: auto;
+}
+
+.authenticated-page {
+  min-height: 100svh;
+  background: #ffffff;
+}
+
+.authenticated-header {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: #000;
+  color: #fff;
+}
+
+.authenticated-header .authenticated-brand {
+  margin: 0;
+  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.authenticated-header .authenticated-logout {
+  min-width: 96px;
+  border-color: #fff;
+  color: #fff;
+}
+
+.authenticated-header .authenticated-logout:hover {
+  border-color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.authenticated-main {
+  width: min(1240px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 40px 0;
+}
+
+.authenticated-main .authenticated-title {
+  margin: 0;
+  color: #20262a;
+  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-size: clamp(28px, 4vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+}
+
+.authenticated-main .authenticated-subtitle {
+  margin-top: 8px;
+  color: #5f6870;
+}
+
+.authenticated-placeholder {
+  width: min(520px, 100%);
+  padding: 28px;
+  border: 1px solid #e1e5e8;
+  border-radius: 6px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+}
+
+.authenticated-placeholder .authenticated-placeholder-title {
+  margin: 0;
+  color: #20262a;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.authenticated-placeholder .authenticated-placeholder-copy {
+  margin-top: 8px;
+  color: #5f6870;
+}
+
+@media (max-width: 900px) {
+  .auth-page {
+    padding: 28px 24px 44px;
+  }
+
+  .auth-stage {
+    margin-top: 36px;
+    justify-content: center;
+  }
+
+  .auth-card {
+    min-height: auto;
+  }
+
+  .auth-illustration {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .auth-page {
+    padding: 22px 16px 32px;
+  }
+
+  .auth-card {
+    padding: 32px 22px;
+  }
+
+  .auth-form-options {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
