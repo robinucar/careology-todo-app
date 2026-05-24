@@ -73,8 +73,10 @@ docker compose up -d postgres
 Run validation checks:
 
 ```bash
+npm run db:generate --workspace @careology/api
 npm run typecheck
 npm run lint
+npm run test
 npm run build
 ```
 
