@@ -25,6 +25,31 @@ describe("formatGraphQLError", () => {
     });
   });
 
+  it("returns AppError messages and codes from context creation errors", () => {
+    const appError = new AppError({
+      code: ERROR_CODES.unauthenticated,
+      message: "Invalid authorization header.",
+    });
+    const result = formatGraphQLError(
+      {
+        message: "Context creation failed: Invalid authorization header.",
+        extensions: {
+          code: ERROR_CODES.internalServerError,
+        },
+      },
+      new GraphQLError("Context creation failed: Invalid authorization header.", {
+        originalError: appError,
+      }),
+    );
+
+    expect(result).toEqual({
+      message: "Invalid authorization header.",
+      extensions: {
+        code: ERROR_CODES.unauthenticated,
+      },
+    });
+  });
+
   it("preserves formatted GraphQL errors", () => {
     const formattedError = {
       message: "GraphQL validation failed",
