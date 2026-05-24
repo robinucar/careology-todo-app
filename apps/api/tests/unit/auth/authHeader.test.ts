@@ -5,7 +5,8 @@ import {
   getCurrentUserIdFromAuthorizationHeader,
 } from "../../../src/auth/authHeader.js";
 import { signAuthToken } from "../../../src/auth/token.js";
-import { AppError, ERROR_CODES } from "../../../src/errors/index.js";
+import { ERROR_CODES } from "../../../src/errors/index.js";
+import { expectToThrowAppError } from "../../helpers/errors.js";
 
 const tokenConfig = {
   jwtSecret: "test-jwt-secret-value-that-is-long-enough",
@@ -31,15 +32,10 @@ describe("getBearerToken", () => {
     "Bearer signed-token extra",
     ["Bearer signed-token"],
   ])("rejects invalid authorization header %j", (header) => {
-    expect(() => getBearerToken(header)).toThrow(AppError);
-
-    try {
-      getBearerToken(header);
-    } catch (error) {
-      expect(error).toBeInstanceOf(AppError);
-      expect((error as AppError).code).toBe(ERROR_CODES.unauthenticated);
-      expect((error as AppError).message).toBe("Invalid authorization header.");
-    }
+    expectToThrowAppError(() => getBearerToken(header), {
+      code: ERROR_CODES.unauthenticated,
+      message: "Invalid authorization header.",
+    });
   });
 });
 
@@ -59,18 +55,13 @@ describe("getCurrentUserIdFromAuthorizationHeader", () => {
   });
 
   it("rejects invalid bearer tokens", () => {
-    expect(() =>
-      getCurrentUserIdFromAuthorizationHeader("Bearer not-a-token", tokenConfig),
-    ).toThrow(AppError);
-
-    try {
-      getCurrentUserIdFromAuthorizationHeader("Bearer not-a-token", tokenConfig);
-    } catch (error) {
-      expect(error).toBeInstanceOf(AppError);
-      expect((error as AppError).code).toBe(ERROR_CODES.unauthenticated);
-      expect((error as AppError).message).toBe(
-        "Invalid or expired authentication token.",
-      );
-    }
+    expectToThrowAppError(
+      () =>
+        getCurrentUserIdFromAuthorizationHeader("Bearer not-a-token", tokenConfig),
+      {
+        code: ERROR_CODES.unauthenticated,
+        message: "Invalid or expired authentication token.",
+      },
+    );
   });
 });

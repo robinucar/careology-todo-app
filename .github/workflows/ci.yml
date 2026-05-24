@@ -9,6 +9,24 @@ jobs:
     name: Validate
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: careology
+          POSTGRES_PASSWORD: careology
+          POSTGRES_DB: careology_todo
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U careology -d careology_todo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://careology:careology@localhost:5433/careology_todo?schema=public
+
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -25,6 +43,9 @@ jobs:
       - name: Generate Prisma Client
         run: npm run db:generate --workspace @careology/api
 
+      - name: Apply database migrations
+        run: npm run db:deploy --workspace @careology/api
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -33,6 +54,9 @@ jobs:
 
       - name: Test
         run: npm run test
+
+      - name: Test database persistence
+        run: npm run test:db
 
       - name: Build
         run: npm run build
