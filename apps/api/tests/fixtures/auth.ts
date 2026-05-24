@@ -6,6 +6,8 @@ export const authFixture = {
   email: "manual-auth-test@example.com",
   emailInput: " MANUAL-AUTH-TEST@example.COM ",
   id: "user_123",
+  name: "Task Master",
+  nameInput: " Task Master ",
   password: "password123",
   wrongPassword: "wrong-password",
 } as const;
@@ -39,10 +41,12 @@ export const createAuthUser = (
   overrides: Partial<{
     email: string;
     id: string;
+    name: string;
   }> = {},
 ) => {
   return {
     id: overrides.id ?? authFixture.id,
+    name: overrides.name ?? authFixture.name,
     email: overrides.email ?? authFixture.email,
   };
 };
@@ -52,6 +56,7 @@ export const createAuthUserWithPasswordHash = (
   overrides: Partial<{
     email: string;
     id: string;
+    name: string;
   }> = {},
 ) => {
   return {

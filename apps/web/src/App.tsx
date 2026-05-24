@@ -1,14 +1,7 @@
-import './App.css'
+import { AuthPage } from './features/auth'
 
 function App() {
-  return (
-    <main className="app-shell">
-      <section className="hero-panel" aria-labelledby="app-title">
-        <p className="eyebrow">Careology Todo App</p>
-        <h1 id="app-title">Todo App</h1>
-      </section>
-    </main>
-  )
+  return <AuthPage />
 }
 
 export default App

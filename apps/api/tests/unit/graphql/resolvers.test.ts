@@ -94,6 +94,7 @@ beforeEach(() => {
     token: "login-token",
     user: {
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
     },
   });
@@ -101,6 +102,7 @@ beforeEach(() => {
     token: "register-token",
     user: {
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
     },
   });
@@ -136,6 +138,7 @@ describe("resolvers", () => {
     const resolvers = await loadResolvers();
     const context = createContext();
     const input = {
+      name: "Task Master",
       email: "user@example.com",
       password: "password123",
     };
@@ -146,6 +149,7 @@ describe("resolvers", () => {
       token: "register-token",
       user: {
         id: "user_123",
+        name: "Task Master",
         email: "user@example.com",
       },
     });
@@ -168,6 +172,7 @@ describe("resolvers", () => {
       token: "login-token",
       user: {
         id: "user_123",
+        name: "Task Master",
         email: "user@example.com",
       },
     });

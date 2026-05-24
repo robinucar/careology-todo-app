@@ -30,12 +30,14 @@ describe("createAuthRepository", () => {
 
     findUnique.mockResolvedValue({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "stored-password-hash",
     });
 
     await expect(repository.findUserByEmail("user@example.com")).resolves.toEqual({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
       passwordHash: "stored-password-hash",
     });
@@ -46,6 +48,7 @@ describe("createAuthRepository", () => {
       },
       select: {
         id: true,
+        name: true,
         email: true,
         passwordHash: true,
       },
@@ -58,26 +61,31 @@ describe("createAuthRepository", () => {
 
     create.mockResolvedValue({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
     });
 
     await expect(
       repository.createUser({
+        name: "Task Master",
         email: "user@example.com",
         passwordHash: "hashed-password",
       }),
     ).resolves.toEqual({
       id: "user_123",
+      name: "Task Master",
       email: "user@example.com",
     });
 
     expect(create).toHaveBeenCalledWith({
       data: {
         email: "user@example.com",
+        name: "Task Master",
         passwordHash: "hashed-password",
       },
       select: {
         id: true,
+        name: true,
         email: true,
       },
     });
@@ -99,6 +107,7 @@ describe("createAuthRepository", () => {
 
     await expect(
       repository.createUser({
+        name: "Task Master",
         email: "user@example.com",
         passwordHash: "hashed-password",
       }),
