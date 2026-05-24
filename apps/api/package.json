@@ -10,7 +10,9 @@
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "test": "vitest run"
+    "db:deploy": "prisma migrate deploy",
+    "test": "vitest run",
+    "test:db": "RUN_DB_TESTS=true vitest run tests/integration/tasks/taskPersistence.test.ts"
   },
   "license": "ISC",
   "type": "module",

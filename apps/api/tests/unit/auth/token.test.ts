@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 import { AppError, ERROR_CODES } from "../../../src/errors/index.js";
 import { signAuthToken, verifyAuthToken } from "../../../src/auth/token.js";
+import { expectToThrowAppError } from "../../helpers/errors.js";
 
 const tokenConfig = {
   jwtSecret: "test-jwt-secret-value-that-is-long-enough",
@@ -32,16 +33,9 @@ describe("token utilities", () => {
   });
 
   it("rejects invalid tokens with a safe auth error", () => {
-    expect(() => verifyAuthToken("not-a-token", tokenConfig)).toThrow(AppError);
-
-    try {
-      verifyAuthToken("not-a-token", tokenConfig);
-    } catch (error) {
-      expect(error).toBeInstanceOf(AppError);
-      expect((error as AppError).code).toBe(ERROR_CODES.unauthenticated);
-      expect((error as AppError).message).toBe(
-        "Invalid or expired authentication token.",
-      );
-    }
+    expectToThrowAppError(() => verifyAuthToken("not-a-token", tokenConfig), {
+      code: ERROR_CODES.unauthenticated,
+      message: "Invalid or expired authentication token.",
+    });
   });
 });

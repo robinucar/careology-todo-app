@@ -9,6 +9,25 @@ export const typeDefs = `#graphql
     user: User!
   }
 
+  type Task {
+    id: ID!
+    title: String!
+    description: String
+    completed: Boolean!
+    dueDate: String
+    tags: [String!]!
+    order: Int!
+
+    weatherCity: String
+    weatherTemperature: Float
+    weatherCondition: String
+    weatherIconUrl: String
+    weatherFetchedAt: String
+
+    createdAt: String!
+    updatedAt: String!
+  }
+
   input RegisterInput {
     email: String!
     password: String!
@@ -19,12 +38,40 @@ export const typeDefs = `#graphql
     password: String!
   }
 
+  input TaskFiltersInput {
+    search: String
+    completed: Boolean
+    tags: [String!]
+    dueBefore: String
+    dueAfter: String
+  }
+
+  input CreateTaskInput {
+    title: String!
+    description: String
+    dueDate: String
+    tags: [String!]
+  }
+
+  input UpdateTaskInput {
+    title: String
+    description: String
+    completed: Boolean
+    dueDate: String
+    tags: [String!]
+  }
+
   type Query {
     health: String!
+    tasks(filters: TaskFiltersInput): [Task!]!
   }
 
   type Mutation {
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
+    createTask(input: CreateTaskInput!): Task!
+    updateTask(id: ID!, input: UpdateTaskInput!): Task!
+    deleteTask(id: ID!): Task!
+    reorderTasks(ids: [ID!]!): [Task!]!
   }
 `;
