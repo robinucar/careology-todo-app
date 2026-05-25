@@ -3,15 +3,19 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "NODE_OPTIONS=--conditions=development tsx watch --include ../../packages/shared/src src/index.ts",
+    "prebuild": "npm run build --workspace @careology/shared",
     "build": "tsc -p tsconfig.json",
+    "pretypecheck": "npm run build --workspace @careology/shared",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit",
     "lint": "eslint .",
     "db:validate": "prisma validate",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "pretest": "npm run build --workspace @careology/shared",
     "test": "vitest run",
+    "pretest:db": "npm run build --workspace @careology/shared",
     "test:db": "RUN_DB_TESTS=true vitest run tests/integration/tasks/taskPersistence.test.ts"
   },
   "license": "ISC",
@@ -33,6 +37,7 @@
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",
+    "@careology/shared": "*",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
     "bcrypt": "^6.0.0",

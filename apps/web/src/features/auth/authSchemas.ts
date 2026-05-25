@@ -1,3 +1,10 @@
+import {
+  AUTH_PASSWORD_MIN_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
+  type LoginInput,
+  type RegisterInput,
+} from '@careology/shared'
 import { z } from 'zod'
 
 const emailSchema = z
@@ -9,13 +16,22 @@ const emailSchema = z
 
 const passwordSchema = z
   .string()
-  .min(8, 'Password must be at least 8 characters.')
+  .min(
+    AUTH_PASSWORD_MIN_LENGTH,
+    `Password must be at least ${AUTH_PASSWORD_MIN_LENGTH} characters.`,
+  )
 
 const usernameSchema = z
   .string()
   .trim()
-  .min(2, 'Username must be at least 2 characters.')
-  .max(80, 'Username must be at most 80 characters.')
+  .min(
+    USER_NAME_MIN_LENGTH,
+    `Username must be at least ${USER_NAME_MIN_LENGTH} characters.`,
+  )
+  .max(
+    USER_NAME_MAX_LENGTH,
+    `Username must be at most ${USER_NAME_MAX_LENGTH} characters.`,
+  )
 
 export const loginFormSchema = z.object({
   email: emailSchema,
@@ -38,14 +54,14 @@ export const registerFormSchema = z
 export type LoginFormValues = z.infer<typeof loginFormSchema>
 export type RegisterFormValues = z.infer<typeof registerFormSchema>
 
-export const toLoginInput = (values: LoginFormValues) => {
+export const toLoginInput = (values: LoginFormValues): LoginInput => {
   return {
     email: values.email,
     password: values.password,
   }
 }
 
-export const toRegisterInput = (values: RegisterFormValues) => {
+export const toRegisterInput = (values: RegisterFormValues): RegisterInput => {
   return {
     name: values.username,
     email: values.email,

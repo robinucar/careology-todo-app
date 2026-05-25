@@ -1,23 +1,11 @@
+import type { AuthPayload } from "@careology/shared";
+
 export type RegisterMutationData = {
-  register: {
-    token: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  };
+  register: AuthPayload;
 };
 
 export type LoginMutationData = {
-  login: {
-    token: string;
-    user: {
-      id: string;
-      name: string;
-      email: string;
-    };
-  };
+  login: AuthPayload;
 };
 
 export const REGISTER_MUTATION = `#graphql

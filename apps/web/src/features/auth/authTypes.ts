@@ -1,17 +1,18 @@
-import type { AuthSession, AuthSessionUser } from '../../app/authSession'
+import type {
+  AuthPayload,
+  AuthUser,
+  LoginInput,
+  RegisterInput,
+} from '@careology/shared'
 
-export type AuthUser = AuthSessionUser
-export type AuthPayload = AuthSession
+export type { AuthPayload, AuthUser }
 
 export type LoginMutationData = {
   login: AuthPayload
 }
 
 export type LoginMutationVariables = {
-  input: {
-    email: string
-    password: string
-  }
+  input: LoginInput
 }
 
 export type RegisterMutationData = {
@@ -19,9 +20,5 @@ export type RegisterMutationData = {
 }
 
 export type RegisterMutationVariables = {
-  input: {
-    name: string
-    email: string
-    password: string
-  }
+  input: RegisterInput
 }

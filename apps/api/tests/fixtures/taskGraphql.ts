@@ -1,44 +1,25 @@
+import type { Task } from "@careology/shared";
 import type { GraphQLContext } from "../../src/context/context.js";
 import type { MockPrismaTask } from "./tasks.js";
 
 export type TasksQueryData = {
-  tasks: Array<{
-    id: string;
-    title: string;
-    dueDate: string | null;
-    createdAt: string;
-    updatedAt: string;
-  }>;
+  tasks: Array<Pick<Task, "id" | "title" | "dueDate" | "createdAt" | "updatedAt">>;
 };
 
 export type CreateTaskMutationData = {
-  createTask: {
-    id: string;
-    title: string;
-    tags: string[];
-    dueDate: string | null;
-  };
+  createTask: Pick<Task, "id" | "title" | "tags" | "dueDate">;
 };
 
 export type UpdateTaskMutationData = {
-  updateTask: {
-    id: string;
-    completed: boolean;
-    title: string;
-  };
+  updateTask: Pick<Task, "id" | "completed" | "title">;
 };
 
 export type DeleteTaskMutationData = {
-  deleteTask: {
-    id: string;
-  };
+  deleteTask: Pick<Task, "id">;
 };
 
 export type ReorderTasksMutationData = {
-  reorderTasks: Array<{
-    id: string;
-    order: number;
-  }>;
+  reorderTasks: Array<Pick<Task, "id" | "order">>;
 };
 
 export const TASKS_QUERY = `#graphql

@@ -1,8 +1,10 @@
+import {
+  TASK_MAX_TAGS,
+  TASK_TAG_MAX_LENGTH,
+  TASK_TITLE_MAX_LENGTH,
+} from "@careology/shared";
 import { z } from "zod";
 
-const MAX_TITLE_LENGTH = 160;
-const MAX_TAGS = 10;
-const MAX_TAG_LENGTH = 32;
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 const ISO_DATE_TIME_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/;
@@ -11,7 +13,10 @@ const titleSchema = z
   .string()
   .trim()
   .min(1, "Task title is required.")
-  .max(MAX_TITLE_LENGTH, `Task title must be ${MAX_TITLE_LENGTH} characters or fewer.`);
+  .max(
+    TASK_TITLE_MAX_LENGTH,
+    `Task title must be ${TASK_TITLE_MAX_LENGTH} characters or fewer.`,
+  );
 
 const nullableTextSchema = z.union([z.string(), z.null()]).transform((value) => {
   if (value === null) {
@@ -94,12 +99,12 @@ const normalisedTagsSchema = z
     return Array.from(new Set(normalisedTags));
   })
   .refine(
-    (tags) => tags.length <= MAX_TAGS,
-    `Tags cannot contain more than ${MAX_TAGS} items.`,
+    (tags) => tags.length <= TASK_MAX_TAGS,
+    `Tags cannot contain more than ${TASK_MAX_TAGS} items.`,
   )
   .refine(
-    (tags) => tags.every((tag) => tag.length <= MAX_TAG_LENGTH),
-    `Tags must be ${MAX_TAG_LENGTH} characters or fewer.`,
+    (tags) => tags.every((tag) => tag.length <= TASK_TAG_MAX_LENGTH),
+    `Tags must be ${TASK_TAG_MAX_LENGTH} characters or fewer.`,
   );
 
 const nullableTagsSchema = z
@@ -167,6 +172,6 @@ export const reorderTaskIdsSchema = z
     }
   });
 
-export type CreateTaskInput = z.infer<typeof createTaskInputSchema>;
-export type UpdateTaskInput = z.infer<typeof updateTaskInputSchema>;
-export type TaskFiltersInput = z.infer<typeof taskFiltersInputSchema>;
+export type ParsedCreateTaskInput = z.infer<typeof createTaskInputSchema>;
+export type ParsedUpdateTaskInput = z.infer<typeof updateTaskInputSchema>;
+export type ParsedTaskFiltersInput = z.infer<typeof taskFiltersInputSchema>;

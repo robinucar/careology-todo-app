@@ -5,14 +5,18 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "npm run build --workspace @careology/shared",
     "build": "tsc -b && vite build",
+    "pretypecheck": "npm run build --workspace @careology/shared",
     "typecheck": "tsc -b && tsc -p tsconfig.test.json --noEmit",
     "lint": "eslint .",
     "preview": "vite preview",
+    "pretest": "npm run build --workspace @careology/shared",
     "test": "vitest run"
   },
   "dependencies": {
     "@apollo/client": "^4.2.0",
+    "@careology/shared": "*",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@fontsource/poppins": "^5.2.7",

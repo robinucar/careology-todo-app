@@ -6,9 +6,9 @@ import {
   reorderTaskIdsSchema,
   taskFiltersInputSchema,
   updateTaskInputSchema,
-  type CreateTaskInput,
-  type TaskFiltersInput,
-  type UpdateTaskInput,
+  type ParsedCreateTaskInput,
+  type ParsedTaskFiltersInput,
+  type ParsedUpdateTaskInput,
 } from "./taskValidation.js";
 
 export type TaskServiceDependencies = TaskRepository & {
@@ -60,11 +60,11 @@ const parseInput = <TOutput>(
   return result.data;
 };
 
-const parseCreateTaskInput = (input: unknown): CreateTaskInput => {
+const parseCreateTaskInput = (input: unknown): ParsedCreateTaskInput => {
   return parseInput(createTaskInputSchema, input);
 };
 
-const parseUpdateTaskInput = (input: unknown): UpdateTaskInput => {
+const parseUpdateTaskInput = (input: unknown): ParsedUpdateTaskInput => {
   const updateInput = parseInput(updateTaskInputSchema, input);
   const hasUpdateFields = Object.values(updateInput).some(
     (value) => value !== undefined,
@@ -77,7 +77,7 @@ const parseUpdateTaskInput = (input: unknown): UpdateTaskInput => {
   return updateInput;
 };
 
-const parseTaskFiltersInput = (input: unknown): TaskFiltersInput => {
+const parseTaskFiltersInput = (input: unknown): ParsedTaskFiltersInput => {
   return parseInput(taskFiltersInputSchema, input ?? {});
 };
 

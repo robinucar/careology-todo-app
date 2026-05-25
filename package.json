@@ -16,10 +16,11 @@
     "apps/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "typecheck": "npm run typecheck --workspaces --if-present",
-    "lint": "npm run lint --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
-    "test:db": "npm run test:db --workspace @careology/api"
+    "build:shared": "npm run build --workspace @careology/shared",
+    "build": "npm run build:shared && npm run build --workspace @careology/api --workspace @careology/web --if-present --ignore-scripts",
+    "typecheck": "npm run typecheck --workspace @careology/shared && npm run build:shared && npm run typecheck --workspace @careology/api --workspace @careology/web --if-present --ignore-scripts",
+    "lint": "npm run lint --workspace @careology/shared --workspace @careology/api --workspace @careology/web --if-present",
+    "test": "npm run build:shared && npm run test --workspace @careology/api --workspace @careology/web --if-present --ignore-scripts",
+    "test:db": "npm run build:shared && npm run test:db --workspace @careology/api --ignore-scripts"
   }
 }
