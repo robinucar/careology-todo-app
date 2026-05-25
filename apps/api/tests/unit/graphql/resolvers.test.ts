@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => {
     createAuthServiceDependencies: vi.fn(),
     createTask: vi.fn(),
     createTaskServiceDependencies: vi.fn(),
+    createWeatherClient: vi.fn(),
+    createWeatherService: vi.fn(),
     deleteTask: vi.fn(),
     listTasks: vi.fn(),
     loginUser: vi.fn(),
@@ -46,6 +48,13 @@ vi.mock("../../../src/tasks/taskService.js", () => {
   };
 });
 
+vi.mock("../../../src/weather/index.js", () => {
+  return {
+    createWeatherClient: mocks.createWeatherClient,
+    createWeatherService: mocks.createWeatherService,
+  };
+});
+
 const createContext = (
   overrides: Partial<GraphQLContext> = {},
 ): GraphQLContext => {
@@ -64,10 +73,22 @@ const loadResolvers = async () => {
   vi.resetModules();
   vi.stubEnv("JWT_SECRET", "test-jwt-secret-value-that-is-long-enough");
   vi.stubEnv("JWT_EXPIRES_IN", "1h");
+  vi.stubEnv("WEATHER_API_KEY", "weather-api-key");
+  vi.stubEnv("WEATHER_API_BASE_URL", "https://api.weather.test/v1");
 
   const module = await import("../../../src/graphql/resolvers.js");
 
   return module.resolvers;
+};
+
+const expectWeatherDependenciesCreated = () => {
+  expect(mocks.createWeatherClient).toHaveBeenCalledWith({
+    apiKey: "weather-api-key",
+    baseUrl: "https://api.weather.test/v1",
+  });
+  expect(mocks.createWeatherService).toHaveBeenCalledWith({
+    weatherClient: "weather-client",
+  });
 };
 
 const expectAuthDependenciesCreatedWith = (context: GraphQLContext) => {
@@ -81,15 +102,19 @@ const expectAuthDependenciesCreatedWith = (context: GraphQLContext) => {
 };
 
 const expectTaskDependenciesCreatedWith = (context: GraphQLContext) => {
+  expectWeatherDependenciesCreated();
   expect(mocks.createTaskServiceDependencies).toHaveBeenCalledWith({
     prisma: context.prisma,
     currentUserId: context.currentUserId,
+    weatherService: "weather-service",
   });
 };
 
 beforeEach(() => {
   mocks.createAuthServiceDependencies.mockReturnValue("auth-dependencies");
   mocks.createTaskServiceDependencies.mockReturnValue("task-dependencies");
+  mocks.createWeatherClient.mockReturnValue("weather-client");
+  mocks.createWeatherService.mockReturnValue("weather-service");
   mocks.loginUser.mockResolvedValue({
     token: "login-token",
     user: {

@@ -89,7 +89,5 @@ const createTaskWeatherLabel = (task: Task): string | null => {
 
   const temperatureLabel = `☼ ${Math.round(task.weatherTemperature)} °C`
 
-  return task.weatherCity
-    ? `${task.weatherCity}: ${temperatureLabel}`
-    : temperatureLabel
+  return temperatureLabel
 }

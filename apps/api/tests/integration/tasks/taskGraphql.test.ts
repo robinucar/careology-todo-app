@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { formatDateInput } from "../../fixtures/dates.js";
 import * as taskGraphql from "../../fixtures/taskGraphql.js";
 import * as taskFixtures from "../../fixtures/tasks.js";
 import * as graphQLTest from "../../helpers/graphql.js";
@@ -10,10 +11,11 @@ describe("task GraphQL integration", () => {
   it("lists authenticated user tasks through GraphQL", async () => {
     const server = await graphQLTest.createTestGraphQLServer();
     const task = taskFixtures.createMockPrismaTask();
+    const dueDate = taskFixtures.taskFixture.dueDate;
 
     task.findMany.mockResolvedValue([
       taskFixtures.createTaskRecord({
-        dueDate: new Date("2026-06-01T00:00:00.000Z"),
+        dueDate,
       }),
     ]);
 
@@ -39,7 +41,7 @@ describe("task GraphQL integration", () => {
       {
         id: "task_123",
         title: "Book London tickets",
-        dueDate: "2026-06-01T00:00:00.000Z",
+        dueDate: dueDate.toISOString(),
         createdAt: "2026-05-24T10:00:00.000Z",
         updatedAt: "2026-05-24T10:00:00.000Z",
       },
@@ -79,13 +81,15 @@ describe("task GraphQL integration", () => {
   it("creates tasks through GraphQL with normalised input", async () => {
     const server = await graphQLTest.createTestGraphQLServer();
     const task = taskFixtures.createMockPrismaTask();
+    const dueDate = taskFixtures.taskFixture.dueDate;
+    const dueDateInput = formatDateInput(dueDate);
 
     task.findFirst.mockResolvedValue({
       order: 2,
     });
     task.create.mockResolvedValue(
       taskFixtures.createTaskRecord({
-        dueDate: new Date("2026-06-01T00:00:00.000Z"),
+        dueDate,
         order: 3,
       }),
     );
@@ -98,7 +102,7 @@ describe("task GraphQL integration", () => {
         variables: {
           input: {
             title: "  Book London tickets  ",
-            dueDate: "2026-06-01",
+            dueDate: dueDateInput,
             tags: [" Travel ", "travel"],
           },
         },
@@ -115,7 +119,7 @@ describe("task GraphQL integration", () => {
       id: "task_123",
       title: "Book London tickets",
       tags: ["travel"],
-      dueDate: "2026-06-01T00:00:00.000Z",
+      dueDate: dueDate.toISOString(),
     });
     expect(task.findFirst).toHaveBeenCalledWith({
       where: {
@@ -133,7 +137,7 @@ describe("task GraphQL integration", () => {
       data: {
         title: "Book London tickets",
         description: null,
-        dueDate: new Date("2026-06-01T00:00:00.000Z"),
+        dueDate,
         order: 3,
         tags: ["travel"],
         userId: "user_123",
@@ -220,6 +224,11 @@ describe("task GraphQL integration", () => {
       taskFixtures.createTaskUpdateCall({
         completed: true,
         title: "Updated title",
+        weatherCity: null,
+        weatherTemperature: null,
+        weatherCondition: null,
+        weatherIconUrl: null,
+        weatherFetchedAt: null,
       }),
     );
   });

@@ -11,6 +11,7 @@ import {
   reorderTasks,
   updateTask,
 } from "../../../src/tasks/taskService.js";
+import { createFutureUtcDate, formatDateInput } from "../../fixtures/dates.js";
 
 type AppPrismaClient = typeof import("../../../src/db/prisma.js").prisma;
 
@@ -97,12 +98,14 @@ describeDatabase("task persistence integration", () => {
   it("persists created tasks and applies task filters", async () => {
     const user = await createTestUser("filters");
     const dependencies = createDependencies(user.id);
+    const dueDate = createFutureUtcDate(30);
+    const dueDateInput = formatDateInput(dueDate);
 
     const createdTask = await createTask(
       {
         title: "  Book London tickets  ",
         description: "  Use the early train  ",
-        dueDate: "2026-06-01",
+        dueDate: dueDateInput,
         tags: [" Travel ", "travel", "Urgent"],
       },
       dependencies,
@@ -143,13 +146,11 @@ describeDatabase("task persistence integration", () => {
       description: "Use the early train",
       tags: ["travel", "urgent"],
     });
-    expect(filteredTasks[0]?.dueDate?.toISOString()).toBe(
-      "2026-06-01T00:00:00.000Z",
-    );
+    expect(filteredTasks[0]?.dueDate?.toISOString()).toBe(dueDate.toISOString());
     expect(persistedTask).toEqual({
       title: "Book London tickets",
       description: "Use the early train",
-      dueDate: new Date("2026-06-01T00:00:00.000Z"),
+      dueDate,
       tags: ["travel", "urgent"],
       userId: user.id,
       deletedAt: null,

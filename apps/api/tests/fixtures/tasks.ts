@@ -5,13 +5,14 @@ import type {
   TaskRecord,
   TaskRepositoryPrismaClient,
 } from "../../src/tasks/taskRepository.js";
+import { createFutureUtcDate } from "./dates.js";
 
 export const taskFixture = {
   id: "task_123",
   userId: "user_123",
   title: "Book London tickets",
   tag: "travel",
-  dueDate: new Date("2026-06-01T00:00:00.000Z"),
+  dueDate: createFutureUtcDate(30),
   timestamp: new Date("2026-05-24T10:00:00.000Z"),
 } as const;
 

@@ -3,6 +3,7 @@ import type { SignOptions } from "jsonwebtoken";
 type JwtExpiresIn = NonNullable<SignOptions["expiresIn"]>;
 
 const DEFAULT_PORT = 4000;
+const DEFAULT_WEATHER_API_BASE_URL = "https://api.weatherapi.com/v1";
 const MIN_PORT = 1;
 const MAX_PORT = 65535;
 const MIN_JWT_SECRET_LENGTH = 32;
@@ -52,8 +53,58 @@ export const parseJwtExpiresIn = (value: string | undefined): JwtExpiresIn => {
   return expiresIn as JwtExpiresIn;
 };
 
+export const parseWeatherApiKey = (
+  value: string | undefined,
+  nodeEnv: string | undefined = process.env["NODE_ENV"],
+): string | null => {
+  const apiKey = value?.trim();
+
+  if (apiKey) {
+    return apiKey;
+  }
+
+  if (nodeEnv === "production") {
+    throw new Error("WEATHER_API_KEY is required in production");
+  }
+
+  return null;
+};
+
+export const parseWeatherApiBaseUrl = (
+  value: string | undefined,
+  nodeEnv: string | undefined = process.env["NODE_ENV"],
+): string => {
+  const baseUrl = value?.trim() || DEFAULT_WEATHER_API_BASE_URL;
+
+  try {
+    const url = new URL(baseUrl);
+
+    if (!["http:", "https:"].includes(url.protocol)) {
+      throw new Error("Invalid protocol");
+    }
+
+    if (nodeEnv === "production" && url.protocol !== "https:") {
+      throw new Error("Invalid production protocol");
+    }
+
+    return url.toString().replace(/\/$/, "");
+  } catch {
+    throw new Error(
+      "WEATHER_API_BASE_URL must be a valid HTTP(S) URL. Production must use HTTPS.",
+    );
+  }
+};
+
 export const env = {
   port: parsePort(process.env["PORT"]),
   jwtSecret: parseJwtSecret(process.env["JWT_SECRET"]),
   jwtExpiresIn: parseJwtExpiresIn(process.env["JWT_EXPIRES_IN"]),
+  weatherApiKey: parseWeatherApiKey(
+    process.env["WEATHER_API_KEY"],
+    process.env["NODE_ENV"],
+  ),
+  weatherApiBaseUrl: parseWeatherApiBaseUrl(
+    process.env["WEATHER_API_BASE_URL"],
+    process.env["NODE_ENV"],
+  ),
 } as const;

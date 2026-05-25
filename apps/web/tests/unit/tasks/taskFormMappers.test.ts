@@ -4,19 +4,21 @@ import {
   emptyTaskFormValues,
   validateTaskFormValues,
 } from '../../../src/features/tasks/taskFormMappers'
+import { createFutureDateInput } from '../../fixtures/dates'
 
 describe('taskFormMappers', () => {
   it('accepts valid due dates in task form input format', () => {
+    const dueDateInput = createFutureDateInput(45)
     const result = validateTaskFormValues({
       ...emptyTaskFormValues,
-      dueDate: '2028-02-29',
+      dueDate: dueDateInput,
       title: 'Book London tickets',
     })
 
     expect(result).toEqual({
       input: {
         description: null,
-        dueDate: '2028-02-29',
+        dueDate: dueDateInput,
         tags: [],
         title: 'Book London tickets',
       },
@@ -34,6 +36,21 @@ describe('taskFormMappers', () => {
     expect(result).toMatchObject({
       errors: {
         dueDate: 'Due date must be a valid date.',
+      },
+      isValid: false,
+    })
+  })
+
+  it('rejects due dates in the past', () => {
+    const result = validateTaskFormValues({
+      ...emptyTaskFormValues,
+      dueDate: '2000-01-01',
+      title: 'Book London tickets',
+    })
+
+    expect(result).toMatchObject({
+      errors: {
+        dueDate: 'Due date cannot be in the past.',
       },
       isValid: false,
     })

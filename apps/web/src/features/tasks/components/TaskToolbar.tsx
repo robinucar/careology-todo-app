@@ -3,6 +3,7 @@ import { Button } from '@mui/material'
 import { LockIcon, SearchIcon } from './TaskIcons'
 
 type TaskToolbarProps = {
+  className?: string
   isLoggingOut: boolean
   onLogout: () => void
   onSearchChange: (value: string) => void
@@ -10,13 +11,16 @@ type TaskToolbarProps = {
 }
 
 export const TaskToolbar = ({
+  className,
   isLoggingOut,
   onLogout,
   onSearchChange,
   searchTerm,
 }: TaskToolbarProps) => {
+  const toolbarClassName = className ? `task-toolbar ${className}` : 'task-toolbar'
+
   return (
-    <div className="task-toolbar">
+    <div className={toolbarClassName}>
       <label className="task-search">
         <SearchIcon className="task-search__icon" />
         <span className="sr-only">Search tasks</span>

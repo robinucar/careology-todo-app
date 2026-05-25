@@ -3,9 +3,9 @@ import { MockedProvider } from '@apollo/client/testing/react'
 import { TASK_TITLE_MAX_LENGTH, type Task } from '@careology/shared'
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ComponentProps } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { AuthSession } from '../../../src/app/authSession'
 import { TaskBoard } from '../../../src/features/tasks'
 import {
   CREATE_TASK_MUTATION,
@@ -13,51 +13,28 @@ import {
   TASKS_QUERY,
   UPDATE_TASK_MUTATION,
 } from '../../../src/features/tasks/taskOperations'
+import {
+  createFutureDateInput,
+  createFutureDateIso,
+  createFutureDateLabel,
+} from '../../fixtures/dates'
+import { authSession, createTaskRecord } from '../../fixtures/tasks'
 import { renderWithTheme } from '../../helpers/render'
 
-const authSession: AuthSession = {
-  token: 'test-token',
-  user: {
-    id: 'user-1',
-    name: 'Task Master',
-    email: 'task.master@example.com',
-  },
-}
-
-const createTaskRecord = (
-  overrides: Partial<Task> & Pick<Task, 'id' | 'title'>,
-): Task => {
-  const { id, title, ...rest } = overrides
-
-  const task = {
-    id,
-    title,
-    description: null,
-    completed: false,
-    dueDate: null,
-    tags: [],
-    order: 1,
-    weatherCity: null,
-    weatherTemperature: null,
-    weatherCondition: null,
-    weatherIconUrl: null,
-    weatherFetchedAt: null,
-    createdAt: '2026-05-25T00:00:00.000Z',
-    updatedAt: '2026-05-25T00:00:00.000Z',
-    ...rest,
-  } satisfies Task
-
-  return {
-    __typename: 'Task',
-    ...task,
-  } as Task
-}
+const pendingDueDateInput = createFutureDateInput(61)
+const pendingDueDateIso = createFutureDateIso(61)
+const createdDueDateInput = createFutureDateInput(62)
+const createdDueDateIso = createFutureDateIso(62)
+const detailsDueDateIso = createFutureDateIso(63)
+const detailsDueDateLabel = createFutureDateLabel(63)
+const updatedDueDateInput = createFutureDateInput(64)
+const updatedDueDateIso = createFutureDateIso(64)
 
 const pendingTask = createTaskRecord({
   id: 'task-pending',
   title: 'Still pending',
   completed: false,
-  dueDate: '2026-07-25T00:00:00.000Z',
+  dueDate: pendingDueDateIso,
   tags: ['low'],
   order: 1,
 })
@@ -89,16 +66,20 @@ const tasksQueryMock = (
   }
 }
 
-const renderTaskBoard = (mocks: ReadonlyArray<MockLink.MockedResponse>) => {
+const renderTaskBoard = (
+  mocks: ReadonlyArray<MockLink.MockedResponse>,
+  props: Partial<ComponentProps<typeof TaskBoard>> = {},
+) => {
   const onLogout = vi.fn()
 
-  renderWithTheme(
+  const renderResult = renderWithTheme(
     <MockedProvider mocks={mocks} showWarnings={false}>
-      <TaskBoard onLogout={onLogout} session={authSession} />
+      <TaskBoard onLogout={onLogout} session={authSession} {...props} />
     </MockedProvider>,
   )
 
   return {
+    ...renderResult,
     onLogout,
     user: userEvent.setup(),
   }
@@ -122,13 +103,37 @@ describe('TaskBoard', () => {
     expect(within(doneTable).getByText('Already completed')).toBeInTheDocument()
   })
 
+  it('keeps mobile search and logout hidden while the mobile menu is closed', async () => {
+    const { container } = renderTaskBoard([tasksQueryMock([])])
+
+    await screen.findByText('No tasks to do yet.')
+
+    expect(container.querySelector('#task-mobile-menu')).toHaveAttribute('hidden')
+  })
+
+  it('renders mobile search and logout when the mobile menu is open', async () => {
+    const { onLogout, user } = renderTaskBoard([tasksQueryMock([])], {
+      isMobileMenuOpen: true,
+    })
+
+    await screen.findByText('No tasks to do yet.')
+    const mobileMenu = screen.getByRole('navigation', {
+      name: 'Mobile task actions',
+    })
+
+    expect(within(mobileMenu).getByLabelText('Search tasks')).toBeInTheDocument()
+    await user.click(within(mobileMenu).getByRole('button', { name: 'Logout' }))
+
+    expect(onLogout).toHaveBeenCalledTimes(1)
+  })
+
   it('creates a task from the add task form and refetches the list', async () => {
     const createdTask = createTaskRecord({
       id: 'task-created',
       title: 'Write a task here',
       completed: false,
       description: 'Remember details',
-      dueDate: '2026-07-25T00:00:00.000Z',
+      dueDate: createdDueDateIso,
       tags: ['high'],
       order: 2,
     })
@@ -138,12 +143,12 @@ describe('TaskBoard', () => {
         request: {
           query: CREATE_TASK_MUTATION,
           variables: {
-            input: {
-              description: 'Remember details',
-              dueDate: '2026-07-25',
-              tags: ['high'],
-              title: 'Write a task here',
-            },
+              input: {
+                description: 'Remember details',
+                dueDate: createdDueDateInput,
+                tags: ['high'],
+                title: 'Write a task here',
+              },
           },
         },
         result: {
@@ -161,7 +166,7 @@ describe('TaskBoard', () => {
     await user.selectOptions(screen.getByLabelText('Priority tag'), 'high')
     fireEvent.change(screen.getByLabelText('Due date'), {
       target: {
-        value: '2026-07-25',
+        value: createdDueDateInput,
       },
     })
     await user.type(screen.getByLabelText('Note'), 'Remember details')
@@ -177,7 +182,7 @@ describe('TaskBoard', () => {
       id: 'task-weather',
       title: 'Plan my August trip to Tokyo',
       description: 'Book flights',
-      dueDate: '2026-07-25T00:00:00.000Z',
+      dueDate: detailsDueDateIso,
       weatherCity: 'Tokyo',
       weatherTemperature: 30,
     })
@@ -185,9 +190,27 @@ describe('TaskBoard', () => {
     renderTaskBoard([tasksQueryMock([taskWithDetails])])
 
     expect(await screen.findAllByText('Plan my August trip to Tokyo')).not.toHaveLength(0)
-    expect(screen.getAllByText('25/07/26')).not.toHaveLength(0)
+    expect(screen.getAllByText(detailsDueDateLabel)).not.toHaveLength(0)
     expect(screen.getAllByText(/\(Book flights\)/)).not.toHaveLength(0)
-    expect(screen.getAllByText(/\(Tokyo: ☼ 30 °C\)/)).not.toHaveLength(0)
+    expect(screen.getAllByText(/\(☼ 30 °C\)/)).not.toHaveLength(0)
+    expect(screen.queryByText(/\(Tokyo: ☼ 30 °C\)/)).not.toBeInTheDocument()
+  })
+
+  it('collapses and expands task sections from the section heading', async () => {
+    const { user } = renderTaskBoard([tasksQueryMock([pendingTask])])
+
+    expect(await screen.findAllByText('Still pending')).not.toHaveLength(0)
+    const toggle = screen.getByRole('button', { name: 'Tasks to do' })
+
+    await user.click(toggle)
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    expect(screen.queryByRole('table', { name: 'Tasks to do' })).not.toBeInTheDocument()
+
+    await user.click(toggle)
+
+    expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.getByRole('table', { name: 'Tasks to do' })).toBeInTheDocument()
   })
 
   it('validates task titles before sending a create mutation', async () => {
@@ -219,7 +242,7 @@ describe('TaskBoard', () => {
       ...pendingTask,
       title: 'Updated task title',
       description: 'Updated note',
-      dueDate: '2026-08-01T00:00:00.000Z',
+      dueDate: updatedDueDateIso,
       tags: ['urgent'],
     })
     const { user } = renderTaskBoard([
@@ -231,7 +254,7 @@ describe('TaskBoard', () => {
             id: pendingTask.id,
             input: {
               description: 'Updated note',
-              dueDate: '2026-08-01',
+              dueDate: updatedDueDateInput,
               tags: ['urgent'],
               title: 'Updated task title',
             },
@@ -254,7 +277,7 @@ describe('TaskBoard', () => {
     )
 
     expect(screen.getByLabelText('Task name')).toHaveValue('Still pending')
-    expect(screen.getByLabelText('Due date')).toHaveValue('2026-07-25')
+    expect(screen.getByLabelText('Due date')).toHaveValue(pendingDueDateInput)
 
     fireEvent.change(screen.getByLabelText('Task name'), {
       target: {
@@ -268,7 +291,7 @@ describe('TaskBoard', () => {
     })
     fireEvent.change(screen.getByLabelText('Due date'), {
       target: {
-        value: '2026-08-01',
+        value: updatedDueDateInput,
       },
     })
     fireEvent.change(screen.getByLabelText('Note'), {

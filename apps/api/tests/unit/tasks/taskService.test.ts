@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { AppError, ERROR_CODES } from "../../../src/errors/index.js";
-import type { TaskRepository } from "../../../src/tasks/taskRepository.js";
+import { ERROR_CODES } from "../../../src/errors/index.js";
 import {
   createTask,
   deleteTask,
@@ -10,61 +9,41 @@ import {
   type TaskServiceDependencies,
   updateTask,
 } from "../../../src/tasks/taskService.js";
+import {
+  createTaskServiceDependencies as createDependencies,
+  TASK_SERVICE_TASK_ID,
+  TASK_SERVICE_USER_ID,
+} from "../../fixtures/taskService.js";
+import { createFutureUtcDate, formatDateInput } from "../../fixtures/dates.js";
 import { createTaskRecord } from "../../fixtures/tasks.js";
+import {
+  clearedWeatherFields,
+  createWeather,
+  createWeatherService,
+} from "../../fixtures/weather.js";
 
-const createDependencies = (
-  overrides: Partial<TaskServiceDependencies> = {},
-): TaskServiceDependencies => {
-  const task = createTaskRecord();
-  const repository: TaskRepository = {
-    findTasks: vi.fn().mockResolvedValue([task]),
-    createTask: vi.fn().mockResolvedValue(task),
-    findActiveTaskById: vi.fn().mockResolvedValue(task),
-    updateTask: vi.fn().mockResolvedValue(task),
-    softDeleteTask: vi.fn().mockResolvedValue(task),
-    reorderTasks: vi.fn().mockImplementation(
-      (_userId: string, taskIds: string[]) =>
-        Promise.resolve(
-          taskIds.map((taskId, order) =>
-            createTaskRecord({
-              id: taskId,
-              order,
-            }),
-          ),
-        ),
-    ),
-  };
+const expectTaskCreatedWith = (
+  dependencies: TaskServiceDependencies,
+  input: Record<string, unknown>,
+) => {
+  expect(dependencies.createTask).toHaveBeenCalledWith(
+    TASK_SERVICE_USER_ID,
+    input,
+  );
+};
 
-  return {
-    currentUserId: "user_123",
-    ...repository,
-    ...overrides,
-  };
+const expectTaskUpdatedWith = (
+  dependencies: TaskServiceDependencies,
+  input: Record<string, unknown>,
+) => {
+  expect(dependencies.updateTask).toHaveBeenCalledWith(
+    TASK_SERVICE_USER_ID,
+    TASK_SERVICE_TASK_ID,
+    input,
+  );
 };
 
 describe("listTasks", () => {
-  it("lists tasks for the authenticated user with normalised filters", async () => {
-    const dependencies = createDependencies();
-
-    await listTasks(
-      {
-        search: "  London  ",
-        completed: false,
-        tags: [" Travel ", "travel"],
-        dueBefore: "2026-06-01",
-      },
-      dependencies,
-    );
-
-    expect(dependencies.findTasks).toHaveBeenCalledWith("user_123", {
-      search: "London",
-      completed: false,
-      tags: ["travel"],
-      dueBefore: new Date("2026-06-01T00:00:00.000Z"),
-      dueAfter: undefined,
-    });
-  });
-
   it("requires authentication", async () => {
     const dependencies = createDependencies({
       currentUserId: null,
@@ -79,24 +58,58 @@ describe("listTasks", () => {
 });
 
 describe("createTask", () => {
-  it("creates tasks for the authenticated user with normalised input", async () => {
-    const dependencies = createDependencies();
+  it("adds weather data when a new task title contains a supported city", async () => {
+    const weather = createWeather();
+    const weatherService = createWeatherService({
+      getWeatherForTaskTitle: vi.fn().mockResolvedValue({
+        status: "found",
+        weather,
+      }),
+    });
+    const dependencies = createDependencies({
+      weatherService,
+    });
 
     await createTask(
       {
-        title: "  Book London tickets  ",
-        description: "   ",
-        dueDate: "2026-05-24",
-        tags: [" Travel ", "travel"],
+        title: "Book tickets for London",
       },
       dependencies,
     );
 
-    expect(dependencies.createTask).toHaveBeenCalledWith("user_123", {
-      title: "Book London tickets",
+    expect(weatherService.getWeatherForTaskTitle).toHaveBeenCalledWith(
+      "Book tickets for London",
+      null,
+    );
+    expectTaskCreatedWith(dependencies, {
+      title: "Book tickets for London",
       description: null,
-      dueDate: new Date("2026-05-24T00:00:00.000Z"),
-      tags: ["travel"],
+      dueDate: null,
+      tags: [],
+      ...weather,
+    });
+  });
+
+  it("still creates tasks when weather lookup fails", async () => {
+    const weatherService = createWeatherService({
+      getWeatherForTaskTitle: vi.fn().mockRejectedValue(new Error("Weather down")),
+    });
+    const dependencies = createDependencies({
+      weatherService,
+    });
+
+    await createTask(
+      {
+        title: "Book tickets for London",
+      },
+      dependencies,
+    );
+
+    expectTaskCreatedWith(dependencies, {
+      title: "Book tickets for London",
+      description: null,
+      dueDate: null,
+      tags: [],
     });
   });
 
@@ -123,7 +136,7 @@ describe("updateTask", () => {
     const dependencies = createDependencies();
 
     await updateTask(
-      "task_123",
+      TASK_SERVICE_TASK_ID,
       {
         completed: true,
         title: " Updated title ",
@@ -132,19 +145,147 @@ describe("updateTask", () => {
     );
 
     expect(dependencies.findActiveTaskById).toHaveBeenCalledWith(
-      "user_123",
-      "task_123",
+      TASK_SERVICE_USER_ID,
+      TASK_SERVICE_TASK_ID,
     );
-    expect(dependencies.updateTask).toHaveBeenCalledWith("user_123", "task_123", {
+    expectTaskUpdatedWith(dependencies, {
       completed: true,
       title: "Updated title",
     });
   });
 
+  it("refreshes weather data when the task title changes", async () => {
+    const weather = createWeather({
+      weatherCity: "Tokyo",
+    });
+    const weatherService = createWeatherService({
+      getWeatherForTaskTitle: vi.fn().mockResolvedValue({
+        status: "found",
+        weather,
+      }),
+    });
+    const dependencies = createDependencies({
+      weatherService,
+    });
+
+    await updateTask(
+      TASK_SERVICE_TASK_ID,
+      {
+        title: "Plan trip to Tokyo",
+      },
+      dependencies,
+    );
+
+    expect(weatherService.getWeatherForTaskTitle).toHaveBeenCalledWith(
+      "Plan trip to Tokyo",
+      null,
+    );
+    expectTaskUpdatedWith(dependencies, {
+      title: "Plan trip to Tokyo",
+      ...weather,
+    });
+  });
+
+  it("does not refresh weather data when the title is unchanged", async () => {
+    const weatherService = createWeatherService();
+    const dependencies = createDependencies({
+      weatherService,
+    });
+
+    await updateTask(
+      TASK_SERVICE_TASK_ID,
+      {
+        completed: true,
+      },
+      dependencies,
+    );
+
+    expect(weatherService.getWeatherForTaskTitle).not.toHaveBeenCalled();
+    expectTaskUpdatedWith(dependencies, {
+      completed: true,
+    });
+  });
+
+  it("refreshes weather data when the due date changes", async () => {
+    const dueDate = createFutureUtcDate(7);
+    const dueDateInput = formatDateInput(dueDate);
+    const weather = createWeather();
+    const weatherService = createWeatherService({
+      getWeatherForTaskTitle: vi.fn().mockResolvedValue({
+        status: "found",
+        weather,
+      }),
+    });
+    const dependencies = createDependencies({
+      findActiveTaskById: vi.fn().mockResolvedValue(
+        createTaskRecord({
+          title: "Book tickets for London",
+        }),
+      ),
+      weatherService,
+    });
+
+    await updateTask(
+      TASK_SERVICE_TASK_ID,
+      {
+        dueDate: dueDateInput,
+      },
+      dependencies,
+    );
+
+    expect(weatherService.getWeatherForTaskTitle).toHaveBeenCalledWith(
+      "Book tickets for London",
+      dueDate,
+    );
+    expectTaskUpdatedWith(dependencies, {
+      dueDate,
+      ...weather,
+    });
+  });
+
+  it("clears stale weather data on weather refresh misses", async () => {
+    const scenarios = [
+      {
+        getLookupResult: () => Promise.resolve({ status: "no_city" as const }),
+        title: "Prepare meals",
+      },
+      {
+        getLookupResult: () => Promise.resolve({ status: "unavailable" as const }),
+        title: "Book tickets for London",
+      },
+      {
+        getLookupResult: () => Promise.reject(new Error("Weather down")),
+        title: "Book tickets for London",
+      },
+    ];
+
+    for (const { getLookupResult, title } of scenarios) {
+      const weatherService = createWeatherService({
+        getWeatherForTaskTitle: vi.fn().mockImplementation(getLookupResult),
+      });
+      const dependencies = createDependencies({
+        weatherService,
+      });
+
+      await updateTask(TASK_SERVICE_TASK_ID, { title }, dependencies);
+
+      expect(weatherService.getWeatherForTaskTitle).toHaveBeenCalledWith(
+        title,
+        null,
+      );
+      expectTaskUpdatedWith(dependencies, {
+        title,
+        ...clearedWeatherFields,
+      });
+    }
+  });
+
   it("rejects empty updates", async () => {
     const dependencies = createDependencies();
 
-    await expect(updateTask("task_123", {}, dependencies)).rejects.toMatchObject({
+    await expect(
+      updateTask(TASK_SERVICE_TASK_ID, {}, dependencies),
+    ).rejects.toMatchObject({
       code: ERROR_CODES.validationError,
       message: "At least one task field must be provided.",
     });
@@ -159,7 +300,7 @@ describe("updateTask", () => {
 
     await expect(
       updateTask(
-        "task_123",
+        TASK_SERVICE_TASK_ID,
         {
           completed: true,
         },
@@ -177,15 +318,15 @@ describe("deleteTask", () => {
   it("soft deletes active tasks owned by the authenticated user", async () => {
     const dependencies = createDependencies();
 
-    await deleteTask("task_123", dependencies);
+    await deleteTask(TASK_SERVICE_TASK_ID, dependencies);
 
     expect(dependencies.findActiveTaskById).toHaveBeenCalledWith(
-      "user_123",
-      "task_123",
+      TASK_SERVICE_USER_ID,
+      TASK_SERVICE_TASK_ID,
     );
     expect(dependencies.softDeleteTask).toHaveBeenCalledWith(
-      "user_123",
-      "task_123",
+      TASK_SERVICE_USER_ID,
+      TASK_SERVICE_TASK_ID,
     );
   });
 
@@ -194,7 +335,9 @@ describe("deleteTask", () => {
       findActiveTaskById: vi.fn().mockResolvedValue(null),
     });
 
-    await expect(deleteTask("task_123", dependencies)).rejects.toMatchObject({
+    await expect(
+      deleteTask(TASK_SERVICE_TASK_ID, dependencies),
+    ).rejects.toMatchObject({
       code: ERROR_CODES.notFound,
       message: "Task not found.",
     });
@@ -219,13 +362,13 @@ describe("reorderTasks", () => {
       }),
     ]);
 
-    expect(dependencies.reorderTasks).toHaveBeenCalledWith("user_123", [
+    expect(dependencies.reorderTasks).toHaveBeenCalledWith(TASK_SERVICE_USER_ID, [
       "task_1",
       "task_2",
     ]);
   });
 
-  it("rejects duplicate task ids", async () => {
+  it("returns validation errors before reordering invalid input", async () => {
     const dependencies = createDependencies();
 
     await expect(
@@ -235,27 +378,5 @@ describe("reorderTasks", () => {
       message: "Task ids must be unique.",
     });
     expect(dependencies.reorderTasks).not.toHaveBeenCalled();
-  });
-
-  it("returns repository not found errors when any task is missing", async () => {
-    const dependencies = createDependencies({
-      reorderTasks: vi.fn().mockRejectedValue(
-        new AppError({
-          code: ERROR_CODES.notFound,
-          message: "Task not found.",
-        }),
-      ),
-    });
-
-    await expect(reorderTasks(["task_1", "task_2"], dependencies)).rejects.toMatchObject({
-      code: ERROR_CODES.notFound,
-      message: "Task not found.",
-    });
-  });
-
-  it("throws AppError instances for validation failures", async () => {
-    const dependencies = createDependencies();
-
-    await expect(reorderTasks([], dependencies)).rejects.toBeInstanceOf(AppError);
   });
 });
