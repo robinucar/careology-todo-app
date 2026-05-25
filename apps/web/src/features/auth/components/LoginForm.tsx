@@ -16,12 +16,12 @@ type LoginFormProps = {
   onSubmit: (values: LoginFormValues) => void | Promise<void>
 }
 
-export function LoginForm({
+export const LoginForm = ({
   isSubmitting = false,
   onForgotPasswordClick,
   onRegisterClick,
   onSubmit,
-}: LoginFormProps) {
+}: LoginFormProps) => {
   const {
     control,
     formState: { errors },
@@ -48,7 +48,9 @@ export function LoginForm({
           >
             Sign in to
           </Typography>
-          <Typography className="auth-subtitle">get things done ✨</Typography>
+          <Typography aria-hidden="true" className="auth-subtitle">
+            get things done ✨
+          </Typography>
         </Box>
 
         <Stack spacing={2.5}>

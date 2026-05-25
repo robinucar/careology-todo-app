@@ -1,6 +1,6 @@
 import { AuthPage } from './features/auth'
 
-function App() {
+const App = () => {
   return <AuthPage />
 }
 

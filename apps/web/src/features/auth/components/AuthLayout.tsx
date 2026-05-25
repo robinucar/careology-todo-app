@@ -7,7 +7,7 @@ type AuthLayoutProps = {
   children: ReactNode
 }
 
-export function AuthLayout({ children }: AuthLayoutProps) {
+export const AuthLayout = ({ children }: AuthLayoutProps) => {
   return (
     <Box className="auth-page">
       <Typography className="auth-brand" component="p">

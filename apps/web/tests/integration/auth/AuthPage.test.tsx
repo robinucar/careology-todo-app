@@ -11,6 +11,7 @@ import {
 } from '../../../src/app/authSession'
 import { AuthPage } from '../../../src/features/auth/AuthPage'
 import { LOGIN_MUTATION, REGISTER_MUTATION } from '../../../src/features/auth/authOperations'
+import { TASKS_QUERY } from '../../../src/features/tasks/taskOperations'
 import { renderWithTheme } from '../../helpers/render'
 
 const STORAGE_KEY = 'careology.auth.session'
@@ -24,9 +25,23 @@ const authPayload: AuthSession = {
   },
 }
 
+const emptyTasksMock: MockLink.MockedResponse = {
+  request: {
+    query: TASKS_QUERY,
+    variables: {
+      filters: null,
+    },
+  },
+  result: {
+    data: {
+      tasks: [],
+    },
+  },
+}
+
 const renderAuthPage = (mocks: ReadonlyArray<MockLink.MockedResponse> = []) => {
   renderWithTheme(
-    <MockedProvider mocks={mocks} showWarnings={false}>
+    <MockedProvider mocks={[...mocks, emptyTasksMock]} showWarnings={false}>
       <AuthPage />
     </MockedProvider>,
   )
@@ -65,7 +80,7 @@ describe('AuthPage', () => {
     await user.click(screen.getByRole('button', { name: 'Login' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'My Tasks for the next month' }),
+      await screen.findByRole('heading', { name: 'My Tasks' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Signed in as Task Master')).toBeInTheDocument()
     expect(JSON.parse(sessionStorage.getItem(STORAGE_KEY) ?? '')).toEqual(authPayload)
@@ -97,7 +112,7 @@ describe('AuthPage', () => {
     await user.click(screen.getByRole('button', { name: 'Login' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'My Tasks for the next month' }),
+      await screen.findByRole('heading', { name: 'My Tasks' }),
     ).toBeInTheDocument()
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '')).toEqual(authPayload)
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull()
@@ -132,7 +147,7 @@ describe('AuthPage', () => {
       expect(screen.getByRole('button', { name: 'Login' })).toBeDisabled()
     })
     expect(
-      await screen.findByRole('heading', { name: 'My Tasks for the next month' }),
+      await screen.findByRole('heading', { name: 'My Tasks' }),
     ).toBeInTheDocument()
   })
 
@@ -166,7 +181,7 @@ describe('AuthPage', () => {
     await user.click(screen.getByRole('button', { name: 'Login' }))
 
     expect(await screen.findByText('Invalid email or password.')).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'My Tasks for the next month' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'My Tasks' })).not.toBeInTheDocument()
   })
 
   it('moves to the authenticated shell after successful registration', async () => {
@@ -205,7 +220,7 @@ describe('AuthPage', () => {
     await user.click(screen.getByRole('button', { name: 'Register' }))
 
     expect(
-      await screen.findByRole('heading', { name: 'My Tasks for the next month' }),
+      await screen.findByRole('heading', { name: 'My Tasks' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Signed in as task master')).toBeInTheDocument()
   })
@@ -246,7 +261,7 @@ describe('AuthPage', () => {
     expect(
       await screen.findByText('An account with this email already exists.'),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'My Tasks for the next month' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'My Tasks' })).not.toBeInTheDocument()
   })
 
   it('shows a demo-scope message for forgot password', async () => {
@@ -264,7 +279,7 @@ describe('AuthPage', () => {
     const user = renderAuthPage()
 
     expect(
-      await screen.findByRole('heading', { name: 'My Tasks for the next month' }),
+      await screen.findByRole('heading', { name: 'My Tasks' }),
     ).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Logout' }))
@@ -284,7 +299,7 @@ describe('AuthPage', () => {
     renderAuthPage()
 
     expect(
-      await screen.findByRole('heading', { name: 'My Tasks for the next month' }),
+      await screen.findByRole('heading', { name: 'My Tasks' }),
     ).toBeInTheDocument()
 
     clearStoredAuthSession()

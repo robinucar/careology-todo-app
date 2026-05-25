@@ -5,11 +5,11 @@ type AuthTextFieldProps = Omit<TextFieldProps, 'label'> & {
   label: string
 }
 
-export function AuthTextField({
+export const AuthTextField = ({
   id,
   label,
   ...textFieldProps
-}: AuthTextFieldProps) {
+}: AuthTextFieldProps) => {
   const generatedId = useId()
   const fieldId = id ?? generatedId
 
