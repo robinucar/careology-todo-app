@@ -1,3 +1,8 @@
+import {
+  AUTH_PASSWORD_MIN_LENGTH,
+  USER_NAME_MAX_LENGTH,
+  USER_NAME_MIN_LENGTH,
+} from "@careology/shared";
 import { z } from "zod";
 
 const emailSchema = z
@@ -8,13 +13,22 @@ const emailSchema = z
 
 const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters.");
+  .min(
+    AUTH_PASSWORD_MIN_LENGTH,
+    `Password must be at least ${AUTH_PASSWORD_MIN_LENGTH} characters.`,
+  );
 
 const nameSchema = z
   .string()
   .trim()
-  .min(2, "Name must be at least 2 characters.")
-  .max(80, "Name must be at most 80 characters.");
+  .min(
+    USER_NAME_MIN_LENGTH,
+    `Name must be at least ${USER_NAME_MIN_LENGTH} characters.`,
+  )
+  .max(
+    USER_NAME_MAX_LENGTH,
+    `Name must be at most ${USER_NAME_MAX_LENGTH} characters.`,
+  );
 
 export const registerInputSchema = z.object({
   name: nameSchema,

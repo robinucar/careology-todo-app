@@ -1,19 +1,20 @@
 import { CombinedGraphQLErrors, ServerError } from '@apollo/client/errors'
+import { ERROR_CODES, type ErrorCode } from '@careology/shared'
 
 const DEFAULT_AUTH_ERROR_MESSAGE = 'Something went wrong. Please try again.'
 
-const AUTH_ERROR_MESSAGES: Record<string, string> = {
-  EMAIL_ALREADY_EXISTS: 'An account with this email already exists.',
-  INVALID_CREDENTIALS: 'Invalid email or password.',
-  VALIDATION_ERROR: 'Please check your details and try again.',
-}
+const AUTH_ERROR_MESSAGES = {
+  [ERROR_CODES.emailAlreadyExists]: 'An account with this email already exists.',
+  [ERROR_CODES.invalidCredentials]: 'Invalid email or password.',
+  [ERROR_CODES.validationError]: 'Please check your details and try again.',
+} satisfies Partial<Record<ErrorCode, string>>
 
 export const getAuthErrorMessage = (error: unknown) => {
   if (CombinedGraphQLErrors.is(error)) {
     const graphQLError = error.errors[0]
     const errorCode = graphQLError?.extensions?.code
 
-    if (typeof errorCode === 'string' && AUTH_ERROR_MESSAGES[errorCode]) {
+    if (isKnownAuthErrorCode(errorCode)) {
       return AUTH_ERROR_MESSAGES[errorCode]
     }
 
@@ -29,4 +30,10 @@ export const getAuthErrorMessage = (error: unknown) => {
   }
 
   return DEFAULT_AUTH_ERROR_MESSAGE
+}
+
+const isKnownAuthErrorCode = (
+  errorCode: unknown,
+): errorCode is keyof typeof AUTH_ERROR_MESSAGES => {
+  return typeof errorCode === 'string' && errorCode in AUTH_ERROR_MESSAGES
 }

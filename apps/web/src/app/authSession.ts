@@ -1,13 +1,7 @@
-export type AuthSessionUser = {
-  id: string
-  name: string
-  email: string
-}
+import type { AuthPayload, AuthUser } from '@careology/shared'
 
-export type AuthSession = {
-  token: string
-  user: AuthSessionUser
-}
+export type AuthSessionUser = AuthUser
+export type AuthSession = AuthPayload
 
 export type AuthSessionPersistence = 'local' | 'session'
 

@@ -2,9 +2,9 @@ import { Prisma } from "../generated/prisma/client.js";
 import type { prisma } from "../db/prisma.js";
 import { AppError, ERROR_CODES } from "../errors/index.js";
 import type {
-  CreateTaskInput,
-  TaskFiltersInput,
-  UpdateTaskInput,
+  ParsedCreateTaskInput,
+  ParsedTaskFiltersInput,
+  ParsedUpdateTaskInput,
 } from "./taskValidation.js";
 
 export type TaskRepositoryPrismaClient = Pick<
@@ -36,9 +36,12 @@ export type TaskRecord = Prisma.TaskGetPayload<{
 export type TaskRepository = {
   findTasks: (
     userId: string,
-    filters?: TaskFiltersInput,
+    filters?: ParsedTaskFiltersInput,
   ) => Promise<TaskRecord[]>;
-  createTask: (userId: string, input: CreateTaskInput) => Promise<TaskRecord>;
+  createTask: (
+    userId: string,
+    input: ParsedCreateTaskInput,
+  ) => Promise<TaskRecord>;
   findActiveTaskById: (
     userId: string,
     taskId: string,
@@ -46,7 +49,7 @@ export type TaskRepository = {
   updateTask: (
     userId: string,
     taskId: string,
-    input: UpdateTaskInput,
+    input: ParsedUpdateTaskInput,
   ) => Promise<TaskRecord>;
   softDeleteTask: (
     userId: string,
@@ -78,7 +81,9 @@ const createActiveTaskUniqueWhere = (
   };
 };
 
-const createTaskUpdateData = (input: UpdateTaskInput): Prisma.TaskUpdateInput => {
+const createTaskUpdateData = (
+  input: ParsedUpdateTaskInput,
+): Prisma.TaskUpdateInput => {
   const data: Prisma.TaskUpdateInput = {};
 
   if (input.title !== undefined) {
@@ -135,7 +140,7 @@ const mapTaskNotFoundError = (error: unknown): never => {
 
 const createTaskListWhere = (
   userId: string,
-  filters: Partial<TaskFiltersInput> = {},
+  filters: Partial<ParsedTaskFiltersInput> = {},
 ): Prisma.TaskWhereInput => {
   const where: Prisma.TaskWhereInput = {
     userId,
