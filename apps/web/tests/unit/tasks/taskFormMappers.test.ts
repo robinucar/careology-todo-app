@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { TASK_TITLE_MAX_LENGTH } from '@careology/shared'
 
 import {
   emptyTaskFormValues,
@@ -23,6 +24,27 @@ describe('taskFormMappers', () => {
         title: 'Book London tickets',
       },
       isValid: true,
+    })
+  })
+
+  it('validates required and maximum task title length', () => {
+    expect(validateTaskFormValues(emptyTaskFormValues)).toMatchObject({
+      errors: {
+        title: 'Task title is required.',
+      },
+      isValid: false,
+    })
+
+    expect(
+      validateTaskFormValues({
+        ...emptyTaskFormValues,
+        title: 'a'.repeat(TASK_TITLE_MAX_LENGTH + 1),
+      }),
+    ).toMatchObject({
+      errors: {
+        title: `Task title must be ${TASK_TITLE_MAX_LENGTH} characters or fewer.`,
+      },
+      isValid: false,
     })
   })
 

@@ -39,6 +39,8 @@ export type TaskSections = {
   todo: TaskListItem[]
 }
 
+export type TaskSectionKey = keyof TaskSections
+
 export type TasksQueryData = {
   tasks: Task[]
 }
@@ -70,4 +72,12 @@ export type DeleteTaskMutationData = {
 
 export type DeleteTaskMutationVariables = {
   id: string
+}
+
+export type ReorderTasksMutationData = {
+  reorderTasks: Task[]
+}
+
+export type ReorderTasksMutationVariables = {
+  ids: string[]
 }

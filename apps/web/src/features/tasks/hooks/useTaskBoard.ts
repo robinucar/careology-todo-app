@@ -2,48 +2,43 @@ import { useMutation, useQuery } from '@apollo/client/react'
 import { useDeferredValue, useState, type FormEvent } from 'react'
 
 import { getTaskErrorMessage } from '../taskErrorMessage'
-import {
-  createTaskFormValues,
-  emptyTaskFormValues,
-  validateTaskFormValues,
-} from '../taskFormMappers'
+import { validateTaskFormValues } from '../taskFormMappers'
 import { createTaskFilters, createTaskSections } from '../taskMappers'
 import {
   CREATE_TASK_MUTATION,
   DELETE_TASK_MUTATION,
+  REORDER_TASKS_MUTATION,
   TASKS_QUERY,
   UPDATE_TASK_MUTATION,
 } from '../taskOperations'
+import { createReorderedTaskIds } from '../taskReorder'
 import type {
   CreateTaskMutationData,
   CreateTaskMutationVariables,
   DeleteTaskMutationData,
   DeleteTaskMutationVariables,
-  TaskFormErrors,
-  TaskFormValues,
+  ReorderTasksMutationData,
+  ReorderTasksMutationVariables,
   TaskListItem,
+  TaskSectionKey,
   TasksQueryData,
   TasksQueryVariables,
   UpdateTaskMutationData,
   UpdateTaskMutationVariables,
 } from '../taskTypes'
-
-type TaskNotice = {
-  message: string
-  severity: 'error' | 'info' | 'success'
-}
+import { useTaskForms } from './useTaskForms'
+import { useTaskNotice } from './useTaskNotice'
 
 export const useTaskBoard = () => {
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
-  const [editTaskFormValues, setEditTaskFormValues] =
-    useState<TaskFormValues>(emptyTaskFormValues)
-  const [editTaskFormErrors, setEditTaskFormErrors] = useState<TaskFormErrors>({})
-  const [isAddingTask, setIsAddingTask] = useState(false)
-  const [newTaskFormValues, setNewTaskFormValues] =
-    useState<TaskFormValues>(emptyTaskFormValues)
-  const [newTaskFormErrors, setNewTaskFormErrors] = useState<TaskFormErrors>({})
+  const { createForm, editForm } = useTaskForms()
+  const {
+    clearTaskNotice,
+    handleCloseTaskNotice,
+    showTaskError,
+    showTaskSuccess,
+    taskNotice,
+  } = useTaskNotice()
   const [searchTerm, setSearchTerm] = useState('')
-  const [taskNotice, setTaskNotice] = useState<TaskNotice | null>(null)
   const deferredSearchTerm = useDeferredValue(searchTerm)
   const taskFilters = createTaskFilters(deferredSearchTerm)
 
@@ -64,31 +59,28 @@ export const useTaskBoard = () => {
     DeleteTaskMutationData,
     DeleteTaskMutationVariables
   >(DELETE_TASK_MUTATION)
+  const [reorderTasks, reorderTasksResult] = useMutation<
+    ReorderTasksMutationData,
+    ReorderTasksMutationVariables
+  >(REORDER_TASKS_MUTATION)
 
   const tasks = tasksQuery.data?.tasks ?? []
   const taskSections = createTaskSections(tasks)
   const isInitialLoading = tasksQuery.loading && !tasksQuery.data
+  const isSearchActive = searchTerm.trim().length > 0
+  const isDeferredSearchActive = deferredSearchTerm.trim().length > 0
   const isTaskActionInFlight =
-    createTaskResult.loading || updateTaskResult.loading || deleteTaskResult.loading
+    createTaskResult.loading ||
+    updateTaskResult.loading ||
+    deleteTaskResult.loading ||
+    reorderTasksResult.loading
   const isDisabled = isInitialLoading || isTaskActionInFlight
+  const isReorderDisabled =
+    isDisabled || tasksQuery.loading || isSearchActive || isDeferredSearchActive
   const queryErrorMessage = tasksQuery.error
     ? getTaskErrorMessage(tasksQuery.error)
     : null
   const shouldShowTaskSections = !isInitialLoading && !queryErrorMessage
-
-  const showTaskError = (error: unknown) => {
-    setTaskNotice({
-      message: getTaskErrorMessage(error),
-      severity: 'error',
-    })
-  }
-
-  const showTaskSuccess = (message: string) => {
-    setTaskNotice({
-      message,
-      severity: 'success',
-    })
-  }
 
   const refetchTasks = async () => {
     await tasksQuery.refetch({
@@ -96,60 +88,29 @@ export const useTaskBoard = () => {
     })
   }
 
-  const resetCreateTaskForm = () => {
-    setIsAddingTask(false)
-    setNewTaskFormErrors({})
-    setNewTaskFormValues(emptyTaskFormValues)
-  }
-
-  const resetEditTaskForm = () => {
-    setEditingTaskId(null)
-    setEditTaskFormErrors({})
-    setEditTaskFormValues(emptyTaskFormValues)
-  }
-
-  const updateNewTaskFormValues = (values: TaskFormValues) => {
-    setNewTaskFormErrors({})
-    setNewTaskFormValues(values)
-  }
-
-  const updateEditTaskFormValues = (values: TaskFormValues) => {
-    setEditTaskFormErrors({})
-    setEditTaskFormValues(values)
-  }
-
   const startAddingTask = () => {
-    setTaskNotice(null)
-    resetEditTaskForm()
-    setIsAddingTask(true)
-  }
-
-  const handleCloseTaskNotice = (_event?: unknown, reason?: string) => {
-    if (reason === 'clickaway') {
-      return
-    }
-
-    setTaskNotice(null)
+    clearTaskNotice()
+    createForm.start()
   }
 
   const handleCreateTaskSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const validation = validateTaskFormValues(newTaskFormValues)
+    const validation = validateTaskFormValues(createForm.values)
 
     if (!validation.isValid) {
-      setNewTaskFormErrors(validation.errors)
-      setTaskNotice(null)
+      createForm.setErrors(validation.errors)
+      clearTaskNotice()
       return
     }
 
     try {
-      setTaskNotice(null)
+      clearTaskNotice()
       await createTask({
         variables: {
           input: validation.input,
         },
       })
-      resetCreateTaskForm()
+      createForm.reset()
       showTaskSuccess('Task added.')
       await refetchTasks()
     } catch (error) {
@@ -158,37 +119,34 @@ export const useTaskBoard = () => {
   }
 
   const handleStartEditingTask = (task: TaskListItem) => {
-    setTaskNotice(null)
-    resetCreateTaskForm()
-    setEditingTaskId(task.id)
-    setEditTaskFormErrors({})
-    setEditTaskFormValues(createTaskFormValues(task))
+    clearTaskNotice()
+    editForm.start(task)
   }
 
   const handleUpdateTaskSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
-    if (!editingTaskId) {
+    if (!editForm.taskId) {
       return
     }
 
-    const validation = validateTaskFormValues(editTaskFormValues)
+    const validation = validateTaskFormValues(editForm.values)
 
     if (!validation.isValid) {
-      setEditTaskFormErrors(validation.errors)
-      setTaskNotice(null)
+      editForm.setErrors(validation.errors)
+      clearTaskNotice()
       return
     }
 
     try {
-      setTaskNotice(null)
+      clearTaskNotice()
       await updateTask({
         variables: {
-          id: editingTaskId,
+          id: editForm.taskId,
           input: validation.input,
         },
       })
-      resetEditTaskForm()
+      editForm.reset()
       showTaskSuccess('Task updated.')
       await refetchTasks()
     } catch (error) {
@@ -198,7 +156,7 @@ export const useTaskBoard = () => {
 
   const handleToggleTask = async (task: TaskListItem) => {
     try {
-      setTaskNotice(null)
+      clearTaskNotice()
       await updateTask({
         variables: {
           id: task.id,
@@ -215,7 +173,7 @@ export const useTaskBoard = () => {
 
   const handleDeleteTask = async (taskId: string) => {
     try {
-      setTaskNotice(null)
+      clearTaskNotice()
       await deleteTask({
         variables: {
           id: taskId,
@@ -228,33 +186,79 @@ export const useTaskBoard = () => {
     }
   }
 
+  const handleReorderTasks = async (
+    sectionKey: TaskSectionKey,
+    activeTaskId: string,
+    overTaskId: string,
+  ) => {
+    const reorderedTaskIds = createReorderedTaskIds(
+      taskSections,
+      sectionKey,
+      activeTaskId,
+      overTaskId,
+    )
+
+    if (!reorderedTaskIds) {
+      return
+    }
+
+    try {
+      clearTaskNotice()
+      await reorderTasks({
+        variables: {
+          ids: reorderedTaskIds,
+        },
+      })
+      showTaskSuccess('Task order updated.')
+      await refetchTasks()
+    } catch (error) {
+      showTaskError(error)
+    }
+  }
+
   return {
-    createTaskResult,
-    editTaskFormErrors,
-    editTaskFormValues,
-    editingTaskId,
-    handleCloseTaskNotice,
-    handleCreateTaskSubmit,
-    handleDeleteTask,
-    handleStartEditingTask,
-    handleToggleTask,
-    handleUpdateTaskSubmit,
-    isAddingTask,
-    isDisabled,
-    isInitialLoading,
-    newTaskFormErrors,
-    newTaskFormValues,
-    queryErrorMessage,
-    resetCreateTaskForm,
-    resetEditTaskForm,
-    searchTerm,
-    updateEditTaskFormValues,
-    updateNewTaskFormValues,
-    setSearchTerm,
-    shouldShowTaskSections,
-    startAddingTask,
-    taskNotice,
-    taskSections,
-    updateTaskResult,
+    actions: {
+      deleteTask: handleDeleteTask,
+      reorderTasks: handleReorderTasks,
+      startAddingTask,
+      startEditingTask: handleStartEditingTask,
+      toggleTask: handleToggleTask,
+    },
+    forms: {
+      create: {
+        errors: createForm.errors,
+        isOpen: createForm.isOpen,
+        isSubmitting: createTaskResult.loading,
+        onCancel: createForm.reset,
+        onChange: createForm.updateValues,
+        onSubmit: handleCreateTaskSubmit,
+        values: createForm.values,
+      },
+      edit: {
+        errors: editForm.errors,
+        isOpen: Boolean(editForm.taskId),
+        isSubmitting: updateTaskResult.loading,
+        onCancel: editForm.reset,
+        onChange: editForm.updateValues,
+        onSubmit: handleUpdateTaskSubmit,
+        values: editForm.values,
+      },
+    },
+    notice: {
+      onClose: handleCloseTaskNotice,
+      value: taskNotice,
+    },
+    search: {
+      onChange: setSearchTerm,
+      term: searchTerm,
+    },
+    state: {
+      isDisabled,
+      isInitialLoading,
+      isReorderDisabled,
+      queryErrorMessage,
+      shouldShowTaskSections,
+      taskSections,
+    },
   }
 }

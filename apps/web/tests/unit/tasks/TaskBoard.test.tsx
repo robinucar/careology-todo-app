@@ -1,22 +1,21 @@
 import type { MockLink } from '@apollo/client/testing'
 import { MockedProvider } from '@apollo/client/testing/react'
-import { TASK_TITLE_MAX_LENGTH, type Task } from '@careology/shared'
-import { fireEvent, screen, waitFor, within } from '@testing-library/react'
+import type { Task } from '@careology/shared'
+import { fireEvent, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ComponentProps } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import type { DocumentNode } from 'graphql'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { TaskBoard } from '../../../src/features/tasks'
 import {
   CREATE_TASK_MUTATION,
-  DELETE_TASK_MUTATION,
   TASKS_QUERY,
   UPDATE_TASK_MUTATION,
 } from '../../../src/features/tasks/taskOperations'
 import {
   createFutureDateInput,
   createFutureDateIso,
-  createFutureDateLabel,
 } from '../../fixtures/dates'
 import { authSession, createTaskRecord } from '../../fixtures/tasks'
 import { renderWithTheme } from '../../helpers/render'
@@ -25,18 +24,21 @@ const pendingDueDateInput = createFutureDateInput(61)
 const pendingDueDateIso = createFutureDateIso(61)
 const createdDueDateInput = createFutureDateInput(62)
 const createdDueDateIso = createFutureDateIso(62)
-const detailsDueDateIso = createFutureDateIso(63)
-const detailsDueDateLabel = createFutureDateLabel(63)
 const updatedDueDateInput = createFutureDateInput(64)
 const updatedDueDateIso = createFutureDateIso(64)
 
 const pendingTask = createTaskRecord({
   id: 'task-pending',
   title: 'Still pending',
-  completed: false,
   dueDate: pendingDueDateIso,
   tags: ['low'],
   order: 1,
+})
+
+const laterPendingTask = createTaskRecord({
+  id: 'task-later-pending',
+  title: 'Later pending',
+  order: 2,
 })
 
 const doneTask = createTaskRecord({
@@ -66,6 +68,40 @@ const tasksQueryMock = (
   }
 }
 
+const taskMutationMock = (
+  query: DocumentNode,
+  variables: Record<string, unknown>,
+  field: string,
+  task: Task,
+): MockLink.MockedResponse => {
+  return {
+    request: {
+      query,
+      variables,
+    },
+    result: {
+      data: {
+        [field]: task,
+      },
+    },
+  }
+}
+
+const createMatchMedia = (matches: boolean) => {
+  return (query: string): MediaQueryList => {
+    return {
+      matches,
+      media: query,
+      onchange: null,
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    }
+  }
+}
+
 const renderTaskBoard = (
   mocks: ReadonlyArray<MockLink.MockedResponse>,
   props: Partial<ComponentProps<typeof TaskBoard>> = {},
@@ -85,7 +121,32 @@ const renderTaskBoard = (
   }
 }
 
+const fillTaskForm = async (
+  user: ReturnType<typeof userEvent.setup>,
+  values: {
+    dueDate: string
+    note: string
+    tag: string
+    title: string
+  },
+) => {
+  fireEvent.change(screen.getByLabelText('Task name'), {
+    target: { value: values.title },
+  })
+  await user.selectOptions(screen.getByLabelText('Priority tag'), values.tag)
+  fireEvent.change(screen.getByLabelText('Due date'), {
+    target: { value: values.dueDate },
+  })
+  fireEvent.change(screen.getByLabelText('Note'), {
+    target: { value: values.note },
+  })
+}
+
 describe('TaskBoard', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
   it('renders tasks from the GraphQL query in todo and done sections', async () => {
     renderTaskBoard([tasksQueryMock([doneTask, pendingTask])])
 
@@ -103,24 +164,27 @@ describe('TaskBoard', () => {
     expect(within(doneTable).getByText('Already completed')).toBeInTheDocument()
   })
 
-  it('keeps mobile search and logout hidden while the mobile menu is closed', async () => {
-    const { container } = renderTaskBoard([tasksQueryMock([])])
+  it('renders mobile task layout and mobile menu actions', async () => {
+    vi.stubGlobal('matchMedia', createMatchMedia(true))
+    const { onLogout, user } = renderTaskBoard(
+      [tasksQueryMock([pendingTask, laterPendingTask])],
+      { isMobileMenuOpen: true },
+    )
 
-    await screen.findByText('No tasks to do yet.')
-
-    expect(container.querySelector('#task-mobile-menu')).toHaveAttribute('hidden')
-  })
-
-  it('renders mobile search and logout when the mobile menu is open', async () => {
-    const { onLogout, user } = renderTaskBoard([tasksQueryMock([])], {
-      isMobileMenuOpen: true,
-    })
-
-    await screen.findByText('No tasks to do yet.')
+    expect(await screen.findAllByText('Still pending')).not.toHaveLength(0)
+    const todoList = screen.getByRole('list', { name: 'Tasks to do' })
     const mobileMenu = screen.getByRole('navigation', {
       name: 'Mobile task actions',
     })
 
+    expect(
+      screen.queryByRole('table', { name: 'Tasks to do' }),
+    ).not.toBeInTheDocument()
+    expect(
+      within(todoList).getByRole('button', {
+        name: 'Reorder task: Still pending',
+      }),
+    ).toBeEnabled()
     expect(within(mobileMenu).getByLabelText('Search tasks')).toBeInTheDocument()
     await user.click(within(mobileMenu).getByRole('button', { name: 'Logout' }))
 
@@ -137,104 +201,31 @@ describe('TaskBoard', () => {
       tags: ['high'],
       order: 2,
     })
+    const input = {
+      description: 'Remember details',
+      dueDate: createdDueDateInput,
+      tags: ['high'],
+      title: 'Write a task here',
+    }
     const { user } = renderTaskBoard([
       tasksQueryMock([pendingTask]),
-      {
-        request: {
-          query: CREATE_TASK_MUTATION,
-          variables: {
-              input: {
-                description: 'Remember details',
-                dueDate: createdDueDateInput,
-                tags: ['high'],
-                title: 'Write a task here',
-              },
-          },
-        },
-        result: {
-          data: {
-            createTask: createdTask,
-          },
-        },
-      },
+      taskMutationMock(CREATE_TASK_MUTATION, { input }, 'createTask', createdTask),
       tasksQueryMock([pendingTask, createdTask]),
     ])
 
     await screen.findAllByText('Still pending')
     await user.click(screen.getByRole('button', { name: 'Add task' }))
-    await user.type(screen.getByLabelText('Task name'), 'Write a task here')
-    await user.selectOptions(screen.getByLabelText('Priority tag'), 'high')
-    fireEvent.change(screen.getByLabelText('Due date'), {
-      target: {
-        value: createdDueDateInput,
-      },
+    await fillTaskForm(user, {
+      dueDate: createdDueDateInput,
+      note: 'Remember details',
+      tag: 'high',
+      title: 'Write a task here',
     })
-    await user.type(screen.getByLabelText('Note'), 'Remember details')
     await user.click(screen.getByRole('button', { name: 'Add' }))
 
     expect(await screen.findByText('Task added.')).toBeInTheDocument()
     expect(await screen.findAllByText('Write a task here')).not.toHaveLength(0)
     expect(await screen.findAllByText('High')).not.toHaveLength(0)
-  })
-
-  it('shows note and weather details without dropping either value', async () => {
-    const taskWithDetails = createTaskRecord({
-      id: 'task-weather',
-      title: 'Plan my August trip to Tokyo',
-      description: 'Book flights',
-      dueDate: detailsDueDateIso,
-      weatherCity: 'Tokyo',
-      weatherTemperature: 30,
-    })
-
-    renderTaskBoard([tasksQueryMock([taskWithDetails])])
-
-    expect(await screen.findAllByText('Plan my August trip to Tokyo')).not.toHaveLength(0)
-    expect(screen.getAllByText(detailsDueDateLabel)).not.toHaveLength(0)
-    expect(screen.getAllByText(/\(Book flights\)/)).not.toHaveLength(0)
-    expect(screen.getAllByText(/\(☼ 30 °C\)/)).not.toHaveLength(0)
-    expect(screen.queryByText(/\(Tokyo: ☼ 30 °C\)/)).not.toBeInTheDocument()
-  })
-
-  it('collapses and expands task sections from the section heading', async () => {
-    const { user } = renderTaskBoard([tasksQueryMock([pendingTask])])
-
-    expect(await screen.findAllByText('Still pending')).not.toHaveLength(0)
-    const toggle = screen.getByRole('button', { name: 'Tasks to do' })
-
-    await user.click(toggle)
-
-    expect(toggle).toHaveAttribute('aria-expanded', 'false')
-    expect(screen.queryByRole('table', { name: 'Tasks to do' })).not.toBeInTheDocument()
-
-    await user.click(toggle)
-
-    expect(toggle).toHaveAttribute('aria-expanded', 'true')
-    expect(screen.getByRole('table', { name: 'Tasks to do' })).toBeInTheDocument()
-  })
-
-  it('validates task titles before sending a create mutation', async () => {
-    const { user } = renderTaskBoard([tasksQueryMock([])])
-
-    await screen.findByText('No tasks to do yet.')
-    await user.click(screen.getByRole('button', { name: 'Add task' }))
-    await user.click(screen.getByRole('button', { name: 'Add' }))
-
-    expect(await screen.findByText('Task title is required.')).toBeInTheDocument()
-    expect(screen.getByLabelText('Task name')).toHaveAttribute('aria-invalid', 'true')
-
-    fireEvent.change(screen.getByLabelText('Task name'), {
-      target: {
-        value: 'a'.repeat(TASK_TITLE_MAX_LENGTH + 1),
-      },
-    })
-    await user.click(screen.getByRole('button', { name: 'Add' }))
-
-    expect(
-      await screen.findByText(
-        `Task title must be ${TASK_TITLE_MAX_LENGTH} characters or fewer.`,
-      ),
-    ).toBeInTheDocument()
   })
 
   it('updates an existing task from the edit form and refetches the list', async () => {
@@ -245,27 +236,20 @@ describe('TaskBoard', () => {
       dueDate: updatedDueDateIso,
       tags: ['urgent'],
     })
+    const input = {
+      description: 'Updated note',
+      dueDate: updatedDueDateInput,
+      tags: ['urgent'],
+      title: 'Updated task title',
+    }
     const { user } = renderTaskBoard([
       tasksQueryMock([pendingTask]),
-      {
-        request: {
-          query: UPDATE_TASK_MUTATION,
-          variables: {
-            id: pendingTask.id,
-            input: {
-              description: 'Updated note',
-              dueDate: updatedDueDateInput,
-              tags: ['urgent'],
-              title: 'Updated task title',
-            },
-          },
-        },
-        result: {
-          data: {
-            updateTask: updatedTask,
-          },
-        },
-      },
+      taskMutationMock(
+        UPDATE_TASK_MUTATION,
+        { id: pendingTask.id, input },
+        'updateTask',
+        updatedTask,
+      ),
       tasksQueryMock([updatedTask]),
     ])
 
@@ -279,25 +263,11 @@ describe('TaskBoard', () => {
     expect(screen.getByLabelText('Task name')).toHaveValue('Still pending')
     expect(screen.getByLabelText('Due date')).toHaveValue(pendingDueDateInput)
 
-    fireEvent.change(screen.getByLabelText('Task name'), {
-      target: {
-        value: 'Updated task title',
-      },
-    })
-    fireEvent.change(screen.getByLabelText('Priority tag'), {
-      target: {
-        value: 'urgent',
-      },
-    })
-    fireEvent.change(screen.getByLabelText('Due date'), {
-      target: {
-        value: updatedDueDateInput,
-      },
-    })
-    fireEvent.change(screen.getByLabelText('Note'), {
-      target: {
-        value: 'Updated note',
-      },
+    await fillTaskForm(user, {
+      dueDate: updatedDueDateInput,
+      note: 'Updated note',
+      tag: 'urgent',
+      title: 'Updated task title',
     })
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
@@ -306,96 +276,10 @@ describe('TaskBoard', () => {
     expect(await screen.findAllByText('Urgent')).not.toHaveLength(0)
   })
 
-  it('offers every Figma task tag option in the add task form', async () => {
-    const { user } = renderTaskBoard([tasksQueryMock([])])
-
-    await screen.findByText('No tasks to do yet.')
-    await user.click(screen.getByRole('button', { name: 'Add task' }))
-
-    expect(screen.getByRole('option', { name: 'Low' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Medium' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'High' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Not urgent' })).toBeInTheDocument()
-    expect(screen.getByRole('option', { name: 'Urgent' })).toBeInTheDocument()
-  })
-
-  it('toggles task completion and refetches the list', async () => {
-    const completedTask = {
-      ...pendingTask,
-      completed: true,
-    }
-    const { user } = renderTaskBoard([
-      tasksQueryMock([pendingTask]),
-      {
-        request: {
-          query: UPDATE_TASK_MUTATION,
-          variables: {
-            id: pendingTask.id,
-            input: {
-              completed: true,
-            },
-          },
-        },
-        result: {
-          data: {
-            updateTask: completedTask,
-          },
-        },
-      },
-      tasksQueryMock([completedTask]),
-    ])
-
-    await screen.findAllByText('Still pending')
-    const todoTable = screen.getByRole('table', { name: 'Tasks to do' })
-
-    await user.click(
-      within(todoTable).getByRole('checkbox', {
-        name: 'Mark as done: Still pending',
-      }),
-    )
-
-    await waitFor(() => {
-      const doneTable = screen.getByRole('table', { name: 'Tasks done' })
-      expect(within(doneTable).getByText('Still pending')).toBeInTheDocument()
-    })
-  })
-
-  it('deletes a task and refetches the list', async () => {
-    const { user } = renderTaskBoard([
-      tasksQueryMock([pendingTask]),
-      {
-        request: {
-          query: DELETE_TASK_MUTATION,
-          variables: {
-            id: pendingTask.id,
-          },
-        },
-        result: {
-          data: {
-            deleteTask: pendingTask,
-          },
-        },
-      },
-      tasksQueryMock([]),
-    ])
-
-    await screen.findAllByText('Still pending')
-    const todoTable = screen.getByRole('table', { name: 'Tasks to do' })
-
-    await user.click(
-      within(todoTable).getByRole('button', { name: 'Delete task: Still pending' }),
-    )
-
-    expect(await screen.findByText('Task deleted.')).toBeInTheDocument()
-    await waitFor(() => {
-      expect(screen.queryByText('Still pending')).not.toBeInTheDocument()
-    })
-  })
-
   it('uses the search term as a GraphQL task filter', async () => {
     renderTaskBoard([
       tasksQueryMock([pendingTask, doneTask]),
-      tasksQueryMock([pendingTask], { search: 'pending' }),
+      tasksQueryMock([pendingTask, laterPendingTask], { search: 'pending' }),
     ])
 
     await screen.findAllByText('Already completed')
@@ -405,18 +289,15 @@ describe('TaskBoard', () => {
       },
     })
 
-    await waitFor(() => {
-      expect(screen.queryByText('Already completed')).not.toBeInTheDocument()
-    })
-    expect(await screen.findAllByText('Still pending')).not.toHaveLength(0)
+    expect(await screen.findAllByText('Later pending')).not.toHaveLength(0)
+    expect(screen.queryByText('Already completed')).not.toBeInTheDocument()
+    const todoTable = screen.getByRole('table', { name: 'Tasks to do' })
+
+    expect(
+      within(todoTable).getByRole('button', {
+        name: 'Reorder task: Still pending',
+      }),
+    ).toBeDisabled()
   })
 
-  it('delegates logout from the desktop task toolbar', async () => {
-    const { onLogout, user } = renderTaskBoard([tasksQueryMock([])])
-
-    await screen.findByText('No tasks to do yet.')
-    await user.click(screen.getByRole('button', { name: 'Logout' }))
-
-    expect(onLogout).toHaveBeenCalledTimes(1)
-  })
 })

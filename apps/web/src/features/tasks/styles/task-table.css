@@ -40,6 +40,13 @@
   color: #5f6870;
 }
 
+.task-table .is-dragging td {
+  position: relative;
+  z-index: 1;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
 .task-table__status {
   width: 52px;
 }
@@ -64,6 +71,12 @@
 .task-table__actions {
   width: 78px;
   text-align: right;
+}
+
+.task-table__title-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .task-table__heading-icon {
@@ -115,6 +128,43 @@
 }
 
 .task-icon-button svg {
+  width: 15px;
+  height: 15px;
+}
+
+.task-drag-handle {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-content: center;
+  padding: 0;
+  border: 0;
+  color: #5c676d;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.task-drag-handle:hover:not(:disabled) {
+  color: #111;
+}
+
+.task-drag-handle:active:not(:disabled) {
+  cursor: grabbing;
+}
+
+.task-drag-handle:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.task-drag-handle:focus-visible {
+  outline: 3px solid var(--task-focus-ring);
+  outline-offset: 2px;
+}
+
+.task-drag-handle svg {
   width: 15px;
   height: 15px;
 }

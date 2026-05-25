@@ -54,3 +54,12 @@ export const DELETE_TASK_MUTATION = gql`
   }
   ${TASK_FIELDS_FRAGMENT}
 `
+
+export const REORDER_TASKS_MUTATION = gql`
+  mutation ReorderTasks($ids: [ID!]!) {
+    reorderTasks(ids: $ids) {
+      ...TaskFields
+    }
+  }
+  ${TASK_FIELDS_FRAGMENT}
+`

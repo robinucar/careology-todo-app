@@ -23,35 +23,7 @@ export const TaskBoard = ({
   onLogout,
   session,
 }: TaskBoardProps) => {
-  const {
-    createTaskResult,
-    editTaskFormErrors,
-    editTaskFormValues,
-    editingTaskId,
-    handleCloseTaskNotice,
-    handleCreateTaskSubmit,
-    handleDeleteTask,
-    handleStartEditingTask,
-    handleToggleTask,
-    handleUpdateTaskSubmit,
-    isAddingTask,
-    isDisabled,
-    isInitialLoading,
-    newTaskFormErrors,
-    newTaskFormValues,
-    queryErrorMessage,
-    resetCreateTaskForm,
-    resetEditTaskForm,
-    searchTerm,
-    setSearchTerm,
-    shouldShowTaskSections,
-    startAddingTask,
-    taskNotice,
-    taskSections,
-    updateEditTaskFormValues,
-    updateNewTaskFormValues,
-    updateTaskResult,
-  } = useTaskBoard()
+  const { actions, forms, notice, search, state } = useTaskBoard()
   const signedInLabel = `Signed in as ${session.user.name || session.user.email}`
 
   return (
@@ -69,8 +41,8 @@ export const TaskBoard = ({
             className="task-toolbar--mobile"
             isLoggingOut={isLoggingOut}
             onLogout={onLogout}
-            onSearchChange={setSearchTerm}
-            searchTerm={searchTerm}
+            onSearchChange={search.onChange}
+            searchTerm={search.term}
           />
         ) : null}
       </nav>
@@ -81,15 +53,15 @@ export const TaskBoard = ({
           className="task-toolbar--desktop"
           isLoggingOut={isLoggingOut}
           onLogout={onLogout}
-          onSearchChange={setSearchTerm}
-          searchTerm={searchTerm}
+          onSearchChange={search.onChange}
+          searchTerm={search.term}
         />
       </div>
 
       <Button
         className="task-add-button"
-        disabled={isDisabled}
-        onClick={startAddingTask}
+        disabled={state.isDisabled}
+        onClick={actions.startAddingTask}
         type="button"
         variant="contained"
       >
@@ -97,77 +69,83 @@ export const TaskBoard = ({
         Add task
       </Button>
 
-      {queryErrorMessage ? (
+      {state.queryErrorMessage ? (
         <Alert className="task-alert" severity="error">
-          {queryErrorMessage}
+          {state.queryErrorMessage}
         </Alert>
       ) : null}
 
-      {isInitialLoading ? (
+      {state.isInitialLoading ? (
         <div className="task-loading-state" role="status">
           <CircularProgress size={24} />
           <span>Loading tasks...</span>
         </div>
       ) : null}
 
-      {isAddingTask ? (
+      {forms.create.isOpen ? (
         <div className="task-create-panel">
           <TaskForm
-            errors={newTaskFormErrors}
+            errors={forms.create.errors}
             formId="new-task"
-            isSubmitting={createTaskResult.loading}
-            onCancel={resetCreateTaskForm}
-            onChange={updateNewTaskFormValues}
-            onSubmit={handleCreateTaskSubmit}
+            isSubmitting={forms.create.isSubmitting}
+            onCancel={forms.create.onCancel}
+            onChange={forms.create.onChange}
+            onSubmit={forms.create.onSubmit}
             submitLabel="Add"
-            values={newTaskFormValues}
+            values={forms.create.values}
           />
         </div>
       ) : null}
 
-      {editingTaskId ? (
+      {forms.edit.isOpen ? (
         <div className="task-create-panel">
           <TaskForm
-            errors={editTaskFormErrors}
+            errors={forms.edit.errors}
             formId="edit-task"
-            isSubmitting={updateTaskResult.loading}
-            onCancel={resetEditTaskForm}
-            onChange={updateEditTaskFormValues}
-            onSubmit={handleUpdateTaskSubmit}
+            isSubmitting={forms.edit.isSubmitting}
+            onCancel={forms.edit.onCancel}
+            onChange={forms.edit.onChange}
+            onSubmit={forms.edit.onSubmit}
             submitLabel="Save"
-            values={editTaskFormValues}
+            values={forms.edit.values}
           />
         </div>
       ) : null}
 
-      {shouldShowTaskSections ? (
+      {state.shouldShowTaskSections ? (
         <div className="task-board__sections">
           <TaskSection
-            disabled={isDisabled}
+            disabled={state.isDisabled}
+            isReorderDisabled={state.isReorderDisabled}
             label="Tasks to do"
-            onDeleteTask={handleDeleteTask}
-            onEditTask={handleStartEditingTask}
-            onToggleTask={handleToggleTask}
-            tasks={taskSections.todo}
+            onDeleteTask={actions.deleteTask}
+            onEditTask={actions.startEditingTask}
+            onReorderTasks={actions.reorderTasks}
+            onToggleTask={actions.toggleTask}
+            sectionKey="todo"
+            tasks={state.taskSections.todo}
           />
           <TaskSection
-            disabled={isDisabled}
+            disabled={state.isDisabled}
+            isReorderDisabled={state.isReorderDisabled}
             label="Tasks done"
-            onDeleteTask={handleDeleteTask}
-            onEditTask={handleStartEditingTask}
-            onToggleTask={handleToggleTask}
-            tasks={taskSections.done}
+            onDeleteTask={actions.deleteTask}
+            onEditTask={actions.startEditingTask}
+            onReorderTasks={actions.reorderTasks}
+            onToggleTask={actions.toggleTask}
+            sectionKey="done"
+            tasks={state.taskSections.done}
           />
         </div>
       ) : null}
       <Snackbar
-        autoHideDuration={taskNotice?.severity === 'success' ? 4000 : null}
-        onClose={handleCloseTaskNotice}
-        open={Boolean(taskNotice)}
+        autoHideDuration={notice.value?.severity === 'success' ? 4000 : null}
+        onClose={notice.onClose}
+        open={Boolean(notice.value)}
       >
-        {taskNotice ? (
-          <Alert onClose={handleCloseTaskNotice} severity={taskNotice.severity}>
-            {taskNotice.message}
+        {notice.value ? (
+          <Alert onClose={notice.onClose} severity={notice.value.severity}>
+            {notice.value.message}
           </Alert>
         ) : undefined}
       </Snackbar>
