@@ -25,7 +25,7 @@ describe("task GraphQL integration", () => {
         variables: {
           filters: {
             search: " London ",
-            tags: [" Travel ", "travel"],
+            tags: [" High ", "high"],
           },
         },
       },
@@ -103,7 +103,7 @@ describe("task GraphQL integration", () => {
           input: {
             title: "  Book London tickets  ",
             dueDate: dueDateInput,
-            tags: [" Travel ", "travel"],
+            tags: [" High ", "high"],
           },
         },
       },
@@ -118,7 +118,7 @@ describe("task GraphQL integration", () => {
     expect(result.data?.createTask).toEqual({
       id: "task_123",
       title: "Book London tickets",
-      tags: ["travel"],
+      tags: ["high"],
       dueDate: dueDate.toISOString(),
     });
     expect(task.findFirst).toHaveBeenCalledWith({
@@ -139,7 +139,7 @@ describe("task GraphQL integration", () => {
         description: null,
         dueDate,
         order: 3,
-        tags: ["travel"],
+        tags: ["high"],
         userId: "user_123",
       },
       select: taskFixtures.taskSelect,

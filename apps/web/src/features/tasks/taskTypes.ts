@@ -2,12 +2,12 @@ import type {
   CreateTaskInput,
   Task,
   TaskFiltersInput,
+  TaskTagTone,
+  TaskTagValue,
   UpdateTaskInput,
 } from '@careology/shared'
 
-export type TaskTagValue = 'low' | 'medium' | 'high' | 'not-urgent' | 'urgent'
-
-export type TaskTagTone = 'default' | 'low' | 'medium' | 'high' | 'notUrgent' | 'urgent'
+export type { TaskTagTone, TaskTagValue } from '@careology/shared'
 
 export type TaskTagBadge = {
   label: string

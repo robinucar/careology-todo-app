@@ -106,14 +106,14 @@ describeDatabase("task persistence integration", () => {
         title: "  Book London tickets  ",
         description: "  Use the early train  ",
         dueDate: dueDateInput,
-        tags: [" Travel ", "travel", "Urgent"],
+        tags: [" High ", "high", "Urgent"],
       },
       dependencies,
     );
     await createTask(
       {
         title: "Call Paris clinic",
-        tags: ["health"],
+        tags: ["medium"],
       },
       dependencies,
     );
@@ -121,7 +121,7 @@ describeDatabase("task persistence integration", () => {
     const filteredTasks = await listTasks(
       {
         search: "london",
-        tags: ["travel"],
+        tags: ["high"],
       },
       dependencies,
     );
@@ -144,14 +144,14 @@ describeDatabase("task persistence integration", () => {
       id: createdTask.id,
       title: "Book London tickets",
       description: "Use the early train",
-      tags: ["travel", "urgent"],
+      tags: ["high", "urgent"],
     });
     expect(filteredTasks[0]?.dueDate?.toISOString()).toBe(dueDate.toISOString());
     expect(persistedTask).toEqual({
       title: "Book London tickets",
       description: "Use the early train",
       dueDate,
-      tags: ["travel", "urgent"],
+      tags: ["high", "urgent"],
       userId: user.id,
       deletedAt: null,
     });

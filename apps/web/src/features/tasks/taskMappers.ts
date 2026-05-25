@@ -1,6 +1,10 @@
-import type { Task } from '@careology/shared'
+import {
+  formatTaskTagLabel,
+  getTaskTagTone,
+  getTaskTagValue,
+  type Task,
+} from '@careology/shared'
 
-import { formatTaskTagLabel, getTaskTagTone, getTaskTagValue } from './taskTags'
 import type { TaskListItem, TaskSections, TaskTagBadge } from './taskTypes'
 
 const sortByOrder = (tasks: TaskListItem[]) => {

@@ -1,7 +1,10 @@
 import {
   TASK_MAX_TAGS,
+  TASK_TAG_OPTIONS,
   TASK_TAG_MAX_LENGTH,
   TASK_TITLE_MAX_LENGTH,
+  getTaskTagValue,
+  type TaskTagValue,
 } from "@careology/shared";
 import { z } from "zod";
 
@@ -102,15 +105,30 @@ const futureNullableDueDateSchema = nullableDueDateSchema.refine(
   "Due date cannot be in the past.",
 );
 
+const validTaskTagLabels = TASK_TAG_OPTIONS.map((option) => option.label).join(
+  ", ",
+);
+const validTaskTagMessage = `Tags must be one of: ${validTaskTagLabels}.`;
+
+const removeBlankTags = (tags: string[]): string[] => {
+  return tags.map((tag) => tag.trim()).filter((tag) => tag.length > 0);
+};
+
+const isKnownTaskTag = (tag: string): boolean => {
+  return getTaskTagValue(tag).length > 0;
+};
+
+const toUniqueCanonicalTaskTags = (tags: string[]): TaskTagValue[] => {
+  const canonicalTags = tags
+    .map((tag) => getTaskTagValue(tag))
+    .filter((tag): tag is TaskTagValue => tag.length > 0);
+
+  return Array.from(new Set(canonicalTags));
+};
+
 const normalisedTagsSchema = z
   .array(z.string())
-  .transform((tags) => {
-    const normalisedTags = tags
-      .map((tag) => tag.trim().toLowerCase())
-      .filter((tag) => tag.length > 0);
-
-    return Array.from(new Set(normalisedTags));
-  })
+  .transform(removeBlankTags)
   .refine(
     (tags) => tags.length <= TASK_MAX_TAGS,
     `Tags cannot contain more than ${TASK_MAX_TAGS} items.`,
@@ -118,7 +136,9 @@ const normalisedTagsSchema = z
   .refine(
     (tags) => tags.every((tag) => tag.length <= TASK_TAG_MAX_LENGTH),
     `Tags must be ${TASK_TAG_MAX_LENGTH} characters or fewer.`,
-  );
+  )
+  .refine((tags) => tags.every(isKnownTaskTag), validTaskTagMessage)
+  .transform(toUniqueCanonicalTaskTags);
 
 const nullableTagsSchema = z
   .union([normalisedTagsSchema, z.null()])

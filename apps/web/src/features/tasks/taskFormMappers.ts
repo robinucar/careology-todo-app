@@ -1,9 +1,9 @@
 import {
+  TASK_TAG_OPTIONS,
   TASK_TITLE_MAX_LENGTH,
   type CreateTaskInput,
 } from '@careology/shared'
 
-import { TASK_TAG_OPTIONS } from './taskTags'
 import type { TaskFormErrors, TaskFormValues, TaskListItem } from './taskTypes'
 
 export const emptyTaskFormValues: TaskFormValues = {

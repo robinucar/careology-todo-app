@@ -9,6 +9,73 @@ export const TASK_TITLE_MAX_LENGTH = 160;
 export const TASK_MAX_TAGS = 10;
 export const TASK_TAG_MAX_LENGTH = 32;
 
+export const TASK_TAG_OPTIONS = [
+  {
+    label: "Low",
+    tone: "low",
+    value: "low",
+  },
+  {
+    label: "Medium",
+    tone: "medium",
+    value: "medium",
+  },
+  {
+    label: "High",
+    tone: "high",
+    value: "high",
+  },
+  {
+    label: "Not urgent",
+    tone: "notUrgent",
+    value: "not-urgent",
+  },
+  {
+    label: "Urgent",
+    tone: "urgent",
+    value: "urgent",
+  },
+] as const;
+
+type TaskTagOption = (typeof TASK_TAG_OPTIONS)[number];
+
+export type TaskTagValue = TaskTagOption["value"];
+export type TaskTagTone = "default" | TaskTagOption["tone"];
+
+export const normalizeTaskTag = (tag: string): string => {
+  return tag.trim().toLowerCase().replace(/[_\s]+/g, "-");
+};
+
+export const getTaskTagValue = (tag: string): TaskTagValue | "" => {
+  const normalizedTag = normalizeTaskTag(tag);
+
+  return TASK_TAG_OPTIONS.some((option) => option.value === normalizedTag)
+    ? (normalizedTag as TaskTagValue)
+    : "";
+};
+
+export const getTaskTagTone = (tag: string): TaskTagTone => {
+  const normalizedTag = normalizeTaskTag(tag);
+  const option = TASK_TAG_OPTIONS.find(({ value }) => value === normalizedTag);
+
+  return option?.tone ?? "default";
+};
+
+export const formatTaskTagLabel = (tag: string): string => {
+  const normalizedTag = normalizeTaskTag(tag);
+  const option = TASK_TAG_OPTIONS.find(({ value }) => value === normalizedTag);
+
+  if (option) {
+    return option.label;
+  }
+
+  return tag
+    .split(/[-_ ]+/)
+    .filter(Boolean)
+    .map((part) => `${part.charAt(0).toUpperCase()}${part.slice(1)}`)
+    .join(" ");
+};
+
 export const ERROR_CODES = {
   unauthenticated: "UNAUTHENTICATED",
   forbidden: "FORBIDDEN",

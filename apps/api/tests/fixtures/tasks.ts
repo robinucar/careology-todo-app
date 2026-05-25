@@ -11,7 +11,7 @@ export const taskFixture = {
   id: "task_123",
   userId: "user_123",
   title: "Book London tickets",
-  tag: "travel",
+  tag: "high",
   dueDate: createFutureUtcDate(30),
   timestamp: new Date("2026-05-24T10:00:00.000Z"),
 } as const;

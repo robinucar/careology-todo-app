@@ -1,9 +1,12 @@
-import { TASK_TITLE_MAX_LENGTH } from '@careology/shared'
+import {
+  TASK_TAG_OPTIONS,
+  TASK_TITLE_MAX_LENGTH,
+  type TaskTagValue,
+} from '@careology/shared'
 import type { FormEvent } from 'react'
 
 import { getTodayDateInputValue } from '../taskFormMappers'
-import { TASK_TAG_OPTIONS } from '../taskTags'
-import type { TaskFormErrors, TaskFormValues, TaskTagValue } from '../taskTypes'
+import type { TaskFormErrors, TaskFormValues } from '../taskTypes'
 
 type TaskFormProps = {
   errors?: TaskFormErrors

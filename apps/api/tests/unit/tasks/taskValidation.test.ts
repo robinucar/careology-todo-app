@@ -20,14 +20,14 @@ describe("createTaskInputSchema", () => {
       title: "  Book London tickets  ",
       description: "   ",
       dueDate: dueDateInput,
-      tags: [" Travel ", "travel", "", "Urgent"],
+      tags: [" High ", "high", "", "Urgent"],
     });
 
     expect(result).toEqual({
       title: "Book London tickets",
       description: null,
       dueDate,
-      tags: ["travel", "urgent"],
+      tags: ["high", "urgent"],
     });
   });
 
@@ -78,6 +78,13 @@ describe("createTaskInputSchema", () => {
         tags: ["a".repeat(33)],
       }),
     ).toThrow("Tags must be 32 characters or fewer.");
+
+    expect(() =>
+      createTaskInputSchema.parse({
+        title: "Unknown tag",
+        tags: ["travel"],
+      }),
+    ).toThrow("Tags must be one of: Low, Medium, High, Not urgent, Urgent.");
   });
 });
 
@@ -121,7 +128,7 @@ describe("taskFiltersInputSchema", () => {
     const result = taskFiltersInputSchema.parse({
       search: "  london  ",
       completed: null,
-      tags: [" Work ", "work"],
+      tags: [" Not urgent ", "not_urgent"],
       dueBefore: dueBeforeInput,
       dueAfter: "",
     });
@@ -129,7 +136,7 @@ describe("taskFiltersInputSchema", () => {
     expect(result).toEqual({
       search: "london",
       completed: undefined,
-      tags: ["work"],
+      tags: ["not-urgent"],
       dueBefore,
       dueAfter: undefined,
     });
