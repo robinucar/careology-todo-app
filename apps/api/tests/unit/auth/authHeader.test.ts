@@ -14,28 +14,29 @@ const tokenConfig = {
 } as const;
 
 describe("getBearerToken", () => {
-  it.each([undefined, ""])("returns null for missing header %j", (header) => {
-    expect(getBearerToken(header)).toBeNull();
+  it("returns null for missing headers", () => {
+    for (const header of [undefined, ""]) {
+      expect(getBearerToken(header)).toBeNull();
+    }
   });
 
-  it("extracts bearer tokens", () => {
+  it("extracts bearer tokens with case-insensitive schemes", () => {
     expect(getBearerToken("Bearer signed-token")).toBe("signed-token");
-  });
-
-  it("accepts case-insensitive bearer schemes", () => {
     expect(getBearerToken("bearer signed-token")).toBe("signed-token");
   });
 
-  it.each([
-    "Basic signed-token",
-    "Bearer",
-    "Bearer signed-token extra",
-    ["Bearer signed-token"],
-  ])("rejects invalid authorization header %j", (header) => {
-    expectToThrowAppError(() => getBearerToken(header), {
-      code: ERROR_CODES.unauthenticated,
-      message: "Invalid authorization header.",
-    });
+  it("rejects invalid authorization headers", () => {
+    for (const header of [
+      "Basic signed-token",
+      "Bearer",
+      "Bearer signed-token extra",
+      ["Bearer signed-token"],
+    ]) {
+      expectToThrowAppError(() => getBearerToken(header), {
+        code: ERROR_CODES.unauthenticated,
+        message: "Invalid authorization header.",
+      });
+    }
   });
 });
 

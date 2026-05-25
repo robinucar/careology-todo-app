@@ -10,15 +10,10 @@ describe("password utilities", () => {
     expect(passwordHash).toMatch(/^\$2[aby]\$12\$/);
   });
 
-  it("verifies matching passwords", async () => {
+  it("verifies matching passwords and rejects non-matching passwords", async () => {
     const passwordHash = await hashPassword("password123");
 
     await expect(verifyPassword("password123", passwordHash)).resolves.toBe(true);
-  });
-
-  it("rejects non-matching passwords", async () => {
-    const passwordHash = await hashPassword("password123");
-
     await expect(verifyPassword("wrong-password", passwordHash)).resolves.toBe(false);
   });
 });

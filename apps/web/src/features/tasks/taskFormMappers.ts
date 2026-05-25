@@ -13,6 +13,13 @@ export const emptyTaskFormValues: TaskFormValues = {
   title: '',
 }
 
+export const getTodayDateInputValue = (): string => {
+  const today = new Date()
+  const timezoneOffsetMs = today.getTimezoneOffset() * 60_000
+
+  return new Date(today.getTime() - timezoneOffsetMs).toISOString().slice(0, 10)
+}
+
 type TaskFormValidationResult =
   | {
       input: CreateTaskInput
@@ -21,7 +28,6 @@ type TaskFormValidationResult =
   | {
       errors: TaskFormErrors
       isValid: false
-      message: string
     }
 
 export const createTaskFormValues = (task: TaskListItem): TaskFormValues => {
@@ -51,6 +57,12 @@ export const validateTaskFormValues = (
     errors.dueDate = 'Due date must be a valid date.'
   }
 
+  if (values.dueDate && isDateInputValue(values.dueDate)) {
+    if (values.dueDate < getTodayDateInputValue()) {
+      errors.dueDate = 'Due date cannot be in the past.'
+    }
+  }
+
   if (values.tag && !isKnownTaskTag(values.tag)) {
     errors.tag = 'Please choose a valid task tag.'
   }
@@ -61,7 +73,6 @@ export const validateTaskFormValues = (
     return {
       errors,
       isValid: false,
-      message,
     }
   }
 

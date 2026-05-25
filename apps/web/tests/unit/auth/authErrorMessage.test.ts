@@ -18,12 +18,16 @@ const createGraphQLError = (code: string, message = 'Server message') => {
 }
 
 describe('getAuthErrorMessage', () => {
-  it.each([
-    ['EMAIL_ALREADY_EXISTS', 'An account with this email already exists.'],
-    ['INVALID_CREDENTIALS', 'Invalid email or password.'],
-    ['VALIDATION_ERROR', 'Please check your details and try again.'],
-  ])('maps %s to a user friendly message', (code, expectedMessage) => {
-    expect(getAuthErrorMessage(createGraphQLError(code))).toBe(expectedMessage)
+  it('maps known app error codes to user friendly messages', () => {
+    const expectedMessages = {
+      EMAIL_ALREADY_EXISTS: 'An account with this email already exists.',
+      INVALID_CREDENTIALS: 'Invalid email or password.',
+      VALIDATION_ERROR: 'Please check your details and try again.',
+    }
+
+    for (const [code, expectedMessage] of Object.entries(expectedMessages)) {
+      expect(getAuthErrorMessage(createGraphQLError(code))).toBe(expectedMessage)
+    }
   })
 
   it('falls back to the GraphQL message for unknown app codes', () => {

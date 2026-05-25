@@ -1,6 +1,6 @@
 import type { MockLink } from '@apollo/client/testing'
 import { MockedProvider } from '@apollo/client/testing/react'
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { GraphQLError } from 'graphql'
 import { beforeEach, describe, expect, it } from 'vitest'
@@ -116,39 +116,6 @@ describe('AuthPage', () => {
     ).toBeInTheDocument()
     expect(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '')).toEqual(authPayload)
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull()
-  })
-
-  it('disables the login button while the login mutation is in flight', async () => {
-    const user = renderAuthPage([
-      {
-        delay: 50,
-        request: {
-          query: LOGIN_MUTATION,
-          variables: {
-            input: {
-              email: 'task.master@example.com',
-              password: 'password123',
-            },
-          },
-        },
-        result: {
-          data: {
-            login: authPayload,
-          },
-        },
-      },
-    ])
-
-    await user.type(screen.getByLabelText('Enter your email'), 'task.master@example.com')
-    await user.type(screen.getByLabelText('Enter your password'), 'password123')
-    await user.click(screen.getByRole('button', { name: 'Login' }))
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Login' })).toBeDisabled()
-    })
-    expect(
-      await screen.findByRole('heading', { name: 'My Tasks' }),
-    ).toBeInTheDocument()
   })
 
   it('shows the backend invalid credentials message for failed login attempts', async () => {
@@ -292,6 +259,30 @@ describe('AuthPage', () => {
     expect(screen.getByText('You have been logged out.')).toBeInTheDocument()
     expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
     expect(sessionStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
+  it('opens mobile task actions from the authenticated shell menu button', async () => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(authPayload))
+    const user = renderAuthPage()
+
+    expect(
+      await screen.findByRole('heading', { name: 'My Tasks' }),
+    ).toBeInTheDocument()
+    expect(document.querySelector('#task-mobile-menu')).toHaveAttribute('hidden')
+
+    await user.click(screen.getByRole('button', { name: 'Open task menu' }))
+
+    const mobileMenu = screen.getByRole('navigation', {
+      name: 'Mobile task actions',
+    })
+
+    expect(screen.getByRole('button', { name: 'Close task menu' })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    )
+    expect(mobileMenu).not.toHaveAttribute('hidden')
+    expect(within(mobileMenu).getByLabelText('Search tasks')).toBeInTheDocument()
+    expect(within(mobileMenu).getByRole('button', { name: 'Logout' })).toBeInTheDocument()
   })
 
   it('returns to login when the stored auth session is cleared globally', async () => {

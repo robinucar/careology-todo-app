@@ -76,6 +76,20 @@ export const useTaskBoard = () => {
     : null
   const shouldShowTaskSections = !isInitialLoading && !queryErrorMessage
 
+  const showTaskError = (error: unknown) => {
+    setTaskNotice({
+      message: getTaskErrorMessage(error),
+      severity: 'error',
+    })
+  }
+
+  const showTaskSuccess = (message: string) => {
+    setTaskNotice({
+      message,
+      severity: 'success',
+    })
+  }
+
   const refetchTasks = async () => {
     await tasksQuery.refetch({
       filters: createTaskFilters(searchTerm),
@@ -136,16 +150,10 @@ export const useTaskBoard = () => {
         },
       })
       resetCreateTaskForm()
-      setTaskNotice({
-        message: 'Task added.',
-        severity: 'success',
-      })
+      showTaskSuccess('Task added.')
       await refetchTasks()
     } catch (error) {
-      setTaskNotice({
-        message: getTaskErrorMessage(error),
-        severity: 'error',
-      })
+      showTaskError(error)
     }
   }
 
@@ -181,16 +189,10 @@ export const useTaskBoard = () => {
         },
       })
       resetEditTaskForm()
-      setTaskNotice({
-        message: 'Task updated.',
-        severity: 'success',
-      })
+      showTaskSuccess('Task updated.')
       await refetchTasks()
     } catch (error) {
-      setTaskNotice({
-        message: getTaskErrorMessage(error),
-        severity: 'error',
-      })
+      showTaskError(error)
     }
   }
 
@@ -207,10 +209,7 @@ export const useTaskBoard = () => {
       })
       await refetchTasks()
     } catch (error) {
-      setTaskNotice({
-        message: getTaskErrorMessage(error),
-        severity: 'error',
-      })
+      showTaskError(error)
     }
   }
 
@@ -222,16 +221,10 @@ export const useTaskBoard = () => {
           id: taskId,
         },
       })
-      setTaskNotice({
-        message: 'Task deleted.',
-        severity: 'success',
-      })
+      showTaskSuccess('Task deleted.')
       await refetchTasks()
     } catch (error) {
-      setTaskNotice({
-        message: getTaskErrorMessage(error),
-        severity: 'error',
-      })
+      showTaskError(error)
     }
   }
 

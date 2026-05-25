@@ -38,6 +38,14 @@ const isValidDateOnly = (year: number, month: number, day: number): boolean => {
   );
 };
 
+const toUtcDateOnlyTime = (date: Date): number => {
+  return Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+};
+
+const isBeforeToday = (date: Date): boolean => {
+  return toUtcDateOnlyTime(date) < toUtcDateOnlyTime(new Date());
+};
+
 const parseIsoDate = (value: string): Date | null => {
   const dateOnlyMatch = DATE_ONLY_PATTERN.exec(value);
 
@@ -89,6 +97,11 @@ const nullableDueDateSchema = z
     return date;
   });
 
+const futureNullableDueDateSchema = nullableDueDateSchema.refine(
+  (date) => date === null || !isBeforeToday(date),
+  "Due date cannot be in the past.",
+);
+
 const normalisedTagsSchema = z
   .array(z.string())
   .transform((tags) => {
@@ -127,7 +140,9 @@ const searchSchema = z
 export const createTaskInputSchema = z.object({
   title: titleSchema,
   description: nullableTextSchema.optional().transform((value) => value ?? null),
-  dueDate: nullableDueDateSchema.optional().transform((value) => value ?? null),
+  dueDate: futureNullableDueDateSchema
+    .optional()
+    .transform((value) => value ?? null),
   tags: nullableTagsSchema.optional().transform((value) => value ?? []),
 });
 
@@ -135,7 +150,7 @@ export const updateTaskInputSchema = z.object({
   title: titleSchema.optional(),
   description: nullableTextSchema.optional(),
   completed: z.boolean().optional(),
-  dueDate: nullableDueDateSchema.optional(),
+  dueDate: futureNullableDueDateSchema.optional(),
   tags: nullableTagsSchema.optional(),
 });
 

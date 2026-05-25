@@ -6,20 +6,27 @@ import {
   taskFiltersInputSchema,
   updateTaskInputSchema,
 } from "../../../src/tasks/taskValidation.js";
+import {
+  createFutureDateTimeInput,
+  createFutureUtcDate,
+  formatDateInput,
+} from "../../fixtures/dates.js";
 
 describe("createTaskInputSchema", () => {
   it("normalises valid task input", () => {
+    const dueDate = createFutureUtcDate(45);
+    const dueDateInput = formatDateInput(dueDate);
     const result = createTaskInputSchema.parse({
       title: "  Book London tickets  ",
       description: "   ",
-      dueDate: "2026-05-24",
+      dueDate: dueDateInput,
       tags: [" Travel ", "travel", "", "Urgent"],
     });
 
     expect(result).toEqual({
       title: "Book London tickets",
       description: null,
-      dueDate: new Date("2026-05-24T00:00:00.000Z"),
+      dueDate,
       tags: ["travel", "urgent"],
     });
   });
@@ -37,33 +44,34 @@ describe("createTaskInputSchema", () => {
     });
   });
 
-  it("rejects blank titles", () => {
+  it("rejects invalid create task input", () => {
     expect(() =>
       createTaskInputSchema.parse({
         title: "   ",
       }),
     ).toThrow("Task title is required.");
-  });
 
-  it("rejects invalid due dates", () => {
     expect(() =>
       createTaskInputSchema.parse({
         title: "Invalid due date",
         dueDate: "2026-02-30",
       }),
     ).toThrow("Due date must be an ISO date or date-time string.");
-  });
 
-  it("rejects too many tags", () => {
+    expect(() =>
+      createTaskInputSchema.parse({
+        title: "Past due date",
+        dueDate: "2000-01-01",
+      }),
+    ).toThrow("Due date cannot be in the past.");
+
     expect(() =>
       createTaskInputSchema.parse({
         title: "Too many tags",
         tags: Array.from({ length: 11 }, (_, index) => `tag-${index}`),
       }),
     ).toThrow("Tags cannot contain more than 10 items.");
-  });
 
-  it("rejects long tags", () => {
     expect(() =>
       createTaskInputSchema.parse({
         title: "Long tag",
@@ -97,21 +105,24 @@ describe("updateTaskInputSchema", () => {
   });
 
   it("accepts ISO date-time due dates", () => {
+    const dueDateTimeInput = createFutureDateTimeInput(45);
     const result = updateTaskInputSchema.parse({
-      dueDate: "2026-05-24T10:30:00.000Z",
+      dueDate: dueDateTimeInput,
     });
 
-    expect(result.dueDate).toEqual(new Date("2026-05-24T10:30:00.000Z"));
+    expect(result.dueDate).toEqual(new Date(dueDateTimeInput));
   });
 });
 
 describe("taskFiltersInputSchema", () => {
   it("normalises filter input", () => {
+    const dueBefore = createFutureUtcDate(30);
+    const dueBeforeInput = formatDateInput(dueBefore);
     const result = taskFiltersInputSchema.parse({
       search: "  london  ",
       completed: null,
       tags: [" Work ", "work"],
-      dueBefore: "2026-06-01",
+      dueBefore: dueBeforeInput,
       dueAfter: "",
     });
 
@@ -119,7 +130,7 @@ describe("taskFiltersInputSchema", () => {
       search: "london",
       completed: undefined,
       tags: ["work"],
-      dueBefore: new Date("2026-06-01T00:00:00.000Z"),
+      dueBefore,
       dueAfter: undefined,
     });
   });
@@ -138,20 +149,16 @@ describe("taskFiltersInputSchema", () => {
 });
 
 describe("reorderTaskIdsSchema", () => {
-  it("normalises task ids", () => {
+  it("normalises task ids and rejects invalid order payloads", () => {
     expect(reorderTaskIdsSchema.parse([" task_1 ", "task_2"])).toEqual([
       "task_1",
       "task_2",
     ]);
-  });
 
-  it("rejects empty reorder lists", () => {
     expect(() => reorderTaskIdsSchema.parse([])).toThrow(
       "At least one task id is required.",
     );
-  });
 
-  it("rejects duplicate task ids", () => {
     expect(() => reorderTaskIdsSchema.parse(["task_1", " task_1 "])).toThrow(
       "Task ids must be unique.",
     );

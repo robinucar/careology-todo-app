@@ -1,6 +1,7 @@
 import { TASK_TITLE_MAX_LENGTH } from '@careology/shared'
 import type { FormEvent } from 'react'
 
+import { getTodayDateInputValue } from '../taskFormMappers'
 import { TASK_TAG_OPTIONS } from '../taskTags'
 import type { TaskFormErrors, TaskFormValues, TaskTagValue } from '../taskTypes'
 
@@ -28,6 +29,7 @@ export const TaskForm = ({
   const titleCharacterCount = values.title.trim().length
   const titleCountId = `${formId}-title-count`
   const titleRequiredId = `${formId}-title-required`
+  const minDueDate = getTodayDateInputValue()
   const getErrorId = (field: keyof TaskFormValues) => `${formId}-${field}-error`
   const getDescribedBy = (...ids: Array<string | false | undefined>) => {
     return ids.filter(Boolean).join(' ') || undefined
@@ -132,6 +134,7 @@ export const TaskForm = ({
             className="task-create-form__date"
             disabled={isSubmitting}
             id={`${formId}-due-date`}
+            min={minDueDate}
             onChange={(event) => {
               updateField('dueDate', event.target.value)
             }}

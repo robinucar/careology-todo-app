@@ -12,12 +12,14 @@ import '../styles/task-mobile.css'
 
 type TaskBoardProps = {
   isLoggingOut?: boolean
+  isMobileMenuOpen?: boolean
   onLogout: () => void
   session: AuthSession
 }
 
 export const TaskBoard = ({
   isLoggingOut = false,
+  isMobileMenuOpen = false,
   onLogout,
   session,
 }: TaskBoardProps) => {
@@ -56,9 +58,27 @@ export const TaskBoard = ({
     <div className="task-board">
       <p className="sr-only">{signedInLabel}</p>
 
+      <nav
+        aria-label="Mobile task actions"
+        className="task-board__mobile-menu"
+        hidden={!isMobileMenuOpen}
+        id="task-mobile-menu"
+      >
+        {isMobileMenuOpen ? (
+          <TaskToolbar
+            className="task-toolbar--mobile"
+            isLoggingOut={isLoggingOut}
+            onLogout={onLogout}
+            onSearchChange={setSearchTerm}
+            searchTerm={searchTerm}
+          />
+        ) : null}
+      </nav>
+
       <div className="task-board__header">
         <h1 className="task-board__title">My Tasks</h1>
         <TaskToolbar
+          className="task-toolbar--desktop"
           isLoggingOut={isLoggingOut}
           onLogout={onLogout}
           onSearchChange={setSearchTerm}

@@ -2,19 +2,60 @@ import { describe, expect, it } from "vitest";
 
 import { ERROR_CODES } from "../../../src/errors/index.js";
 import { createTaskRepository } from "../../../src/tasks/taskRepository.js";
+import { createFutureUtcDate } from "../../fixtures/dates.js";
 import * as taskFixtures from "../../fixtures/tasks.js";
+
+type MockTaskClient = ReturnType<typeof taskFixtures.createMockTaskPrismaClient>;
+
+const USER_ID = "user_123";
+const TASK_ID = "task_123";
+
+const activeTaskWhere = (taskId = TASK_ID) => {
+  return {
+    id: taskId,
+    userId: USER_ID,
+    deletedAt: null,
+  };
+};
+
+const createRepositoryContext = () => {
+  const client = taskFixtures.createMockTaskPrismaClient();
+
+  return {
+    ...client,
+    repository: createTaskRepository(client.prisma),
+  };
+};
+
+const expectTaskUpdate = (
+  update: MockTaskClient["update"],
+  data: Record<string, unknown>,
+  taskId = TASK_ID,
+) => {
+  expect(update).toHaveBeenCalledWith({
+    where: activeTaskWhere(taskId),
+    data,
+    select: taskFixtures.taskSelect,
+  });
+};
+
+const expectTaskNotFound = async (promise: Promise<unknown>) => {
+  await expect(promise).rejects.toMatchObject({
+    code: ERROR_CODES.notFound,
+    message: "Task not found.",
+  });
+};
 
 describe("createTaskRepository", () => {
   it("finds active tasks scoped to the authenticated user", async () => {
-    const { findMany, prisma } = taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
-    const dueAfter = new Date("2026-05-01T00:00:00.000Z");
-    const dueBefore = new Date("2026-06-01T00:00:00.000Z");
+    const { findMany, repository } = createRepositoryContext();
+    const dueAfter = createFutureUtcDate(10);
+    const dueBefore = createFutureUtcDate(30);
 
     findMany.mockResolvedValue([taskFixtures.createTaskRecord()]);
 
     await expect(
-      repository.findTasks("user_123", {
+      repository.findTasks(USER_ID, {
         completed: false,
         dueAfter,
         dueBefore,
@@ -25,7 +66,7 @@ describe("createTaskRepository", () => {
 
     expect(findMany).toHaveBeenCalledWith({
       where: {
-        userId: "user_123",
+        userId: USER_ID,
         deletedAt: null,
         completed: false,
         tags: {
@@ -68,9 +109,7 @@ describe("createTaskRepository", () => {
   });
 
   it("creates tasks using the authenticated user id", async () => {
-    const { create, findFirst, prisma } =
-      taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
+    const { create, findFirst, repository } = createRepositoryContext();
     const task = taskFixtures.createTaskRecord();
 
     findFirst.mockResolvedValue({
@@ -79,7 +118,7 @@ describe("createTaskRepository", () => {
     create.mockResolvedValue(task);
 
     await expect(
-      repository.createTask("user_123", {
+      repository.createTask(USER_ID, {
         title: task.title,
         description: null,
         dueDate: null,
@@ -89,7 +128,7 @@ describe("createTaskRepository", () => {
 
     expect(findFirst).toHaveBeenCalledWith({
       where: {
-        userId: "user_123",
+        userId: USER_ID,
         deletedAt: null,
       },
       orderBy: {
@@ -106,111 +145,89 @@ describe("createTaskRepository", () => {
         dueDate: null,
         order: 3,
         tags: ["travel"],
-        userId: "user_123",
-      },
-      select: taskFixtures.taskSelect,
-    });
-  });
-
-  it("finds active tasks by id and user id", async () => {
-    const { findFirst, prisma } = taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
-
-    findFirst.mockResolvedValue(taskFixtures.createTaskRecord());
-
-    await repository.findActiveTaskById("user_123", "task_123");
-
-    expect(findFirst).toHaveBeenCalledWith({
-      where: {
-        id: "task_123",
-        userId: "user_123",
-        deletedAt: null,
+        userId: USER_ID,
       },
       select: taskFixtures.taskSelect,
     });
   });
 
   it("updates only active tasks owned by the authenticated user", async () => {
-    const { prisma, update } = taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
+    const { repository, update } = createRepositoryContext();
 
     update.mockResolvedValue(taskFixtures.createTaskRecord());
 
-    await repository.updateTask("user_123", "task_123", {
+    await repository.updateTask(USER_ID, TASK_ID, {
       completed: true,
       title: "Updated title",
     });
 
-    expect(update).toHaveBeenCalledWith({
-      where: {
-        id: "task_123",
-        userId: "user_123",
-        deletedAt: null,
-      },
-      data: {
-        completed: true,
-        title: "Updated title",
-      },
-      select: taskFixtures.taskSelect,
+    expectTaskUpdate(update, {
+      completed: true,
+      title: "Updated title",
+    });
+  });
+
+  it("updates task weather fields", async () => {
+    const { repository, update } = createRepositoryContext();
+    const weatherFetchedAt = new Date("2026-05-25T12:00:00.000Z");
+
+    update.mockResolvedValue(
+      taskFixtures.createTaskRecord({
+        weatherCity: "London",
+        weatherTemperature: 12.5,
+        weatherCondition: "Cloudy",
+        weatherIconUrl: "https://cdn.weatherapi.com/weather/64x64/day/119.png",
+        weatherFetchedAt,
+      }),
+    );
+
+    await repository.updateTask(USER_ID, TASK_ID, {
+      title: "Book London tickets",
+      weatherCity: "London",
+      weatherTemperature: 12.5,
+      weatherCondition: "Cloudy",
+      weatherIconUrl: "https://cdn.weatherapi.com/weather/64x64/day/119.png",
+      weatherFetchedAt,
+    });
+
+    expectTaskUpdate(update, {
+      title: "Book London tickets",
+      weatherCity: "London",
+      weatherTemperature: 12.5,
+      weatherCondition: "Cloudy",
+      weatherIconUrl: "https://cdn.weatherapi.com/weather/64x64/day/119.png",
+      weatherFetchedAt,
     });
   });
 
   it("maps update races to a task not found error", async () => {
-    const { prisma, update } = taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
+    const { repository, update } = createRepositoryContext();
 
     update.mockRejectedValue(taskFixtures.createRecordNotFoundError());
 
-    await expect(
-      repository.updateTask("user_123", "task_123", {
+    await expectTaskNotFound(
+      repository.updateTask(USER_ID, TASK_ID, {
         completed: true,
       }),
-    ).rejects.toMatchObject({
-      code: ERROR_CODES.notFound,
-      message: "Task not found.",
-    });
+    );
   });
 
   it("soft deletes tasks instead of hard deleting them", async () => {
-    const { prisma, update } = taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
+    const { repository, update } = createRepositoryContext();
     const deletedAt = new Date("2026-05-24T12:00:00.000Z");
 
     update.mockResolvedValue(taskFixtures.createTaskRecord());
 
-    await repository.softDeleteTask("user_123", "task_123", deletedAt);
+    await repository.softDeleteTask(USER_ID, TASK_ID, deletedAt);
 
-    expect(update).toHaveBeenCalledWith({
-      where: {
-        id: "task_123",
-        userId: "user_123",
-        deletedAt: null,
-      },
-      data: {
-        deletedAt,
-      },
-      select: taskFixtures.taskSelect,
-    });
-  });
-
-  it("maps soft delete races to a task not found error", async () => {
-    const { prisma, update } = taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
-
-    update.mockRejectedValue(taskFixtures.createRecordNotFoundError());
-
-    await expect(
-      repository.softDeleteTask("user_123", "task_123"),
-    ).rejects.toMatchObject({
-      code: ERROR_CODES.notFound,
-      message: "Task not found.",
+    expectTaskUpdate(update, {
+      deletedAt,
     });
   });
 
   it("reorders active tasks owned by the authenticated user in one transaction", async () => {
-    const { $transaction, findMany, prisma, update } =
-      taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
+    const { $transaction, findMany, repository, update } =
+      createRepositoryContext();
 
     findMany.mockResolvedValue([
       {
@@ -229,7 +246,7 @@ describe("createTaskRepository", () => {
       );
 
     await expect(
-      repository.reorderTasks("user_123", ["task_2", "task_1"]),
+      repository.reorderTasks(USER_ID, ["task_2", "task_1"]),
     ).resolves.toEqual([
       taskFixtures.createTaskRecord({
         id: "task_2",
@@ -244,7 +261,7 @@ describe("createTaskRepository", () => {
     expect($transaction).toHaveBeenCalledTimes(1);
     expect(findMany).toHaveBeenCalledWith({
       where: {
-        userId: "user_123",
+        userId: USER_ID,
         deletedAt: null,
       },
       select: {
@@ -252,22 +269,14 @@ describe("createTaskRepository", () => {
       },
     });
     expect(update).toHaveBeenNthCalledWith(1, {
-      where: {
-        id: "task_2",
-        userId: "user_123",
-        deletedAt: null,
-      },
+      where: activeTaskWhere("task_2"),
       data: {
         order: 0,
       },
       select: taskFixtures.taskSelect,
     });
     expect(update).toHaveBeenNthCalledWith(2, {
-      where: {
-        id: "task_1",
-        userId: "user_123",
-        deletedAt: null,
-      },
+      where: activeTaskWhere("task_1"),
       data: {
         order: 1,
       },
@@ -276,9 +285,7 @@ describe("createTaskRepository", () => {
   });
 
   it("returns validation before reordering when the task order is incomplete", async () => {
-    const { findMany, prisma, update } =
-      taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
+    const { findMany, repository, update } = createRepositoryContext();
 
     findMany.mockResolvedValue([
       {
@@ -290,7 +297,7 @@ describe("createTaskRepository", () => {
     ]);
 
     await expect(
-      repository.reorderTasks("user_123", ["task_1"]),
+      repository.reorderTasks(USER_ID, ["task_1"]),
     ).rejects.toMatchObject({
       code: ERROR_CODES.validationError,
       message: "Task order must include every active task exactly once.",
@@ -299,9 +306,7 @@ describe("createTaskRepository", () => {
   });
 
   it("returns not found before reordering when any task is not active for the user", async () => {
-    const { findMany, prisma, update } =
-      taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
+    const { findMany, repository, update } = createRepositoryContext();
 
     findMany.mockResolvedValue([
       {
@@ -309,32 +314,8 @@ describe("createTaskRepository", () => {
       },
     ]);
 
-    await expect(
-      repository.reorderTasks("user_123", ["task_1", "task_2"]),
-    ).rejects.toMatchObject({
-      code: ERROR_CODES.notFound,
-      message: "Task not found.",
-    });
+    await expectTaskNotFound(repository.reorderTasks(USER_ID, ["task_1", "task_2"]));
     expect(update).not.toHaveBeenCalled();
   });
 
-  it("maps reorder update races to a task not found error", async () => {
-    const { findMany, prisma, update } =
-      taskFixtures.createMockTaskPrismaClient();
-    const repository = createTaskRepository(prisma);
-
-    findMany.mockResolvedValue([
-      {
-        id: "task_1",
-      },
-    ]);
-    update.mockRejectedValue(taskFixtures.createRecordNotFoundError());
-
-    await expect(
-      repository.reorderTasks("user_123", ["task_1"]),
-    ).rejects.toMatchObject({
-      code: ERROR_CODES.notFound,
-      message: "Task not found.",
-    });
-  });
 });

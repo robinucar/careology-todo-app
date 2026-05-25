@@ -15,6 +15,7 @@ import {
   reorderTasks as reorderTasksUseCase,
   updateTask as updateTaskUseCase,
 } from "../tasks/taskService.js";
+import { createWeatherClient, createWeatherService } from "../weather/index.js";
 
 type AuthMutationArgs = {
   input: unknown;
@@ -51,10 +52,18 @@ const createAuthDependencies = (context: GraphQLContext) => {
   });
 };
 
+const weatherService = createWeatherService({
+  weatherClient: createWeatherClient({
+    apiKey: env.weatherApiKey,
+    baseUrl: env.weatherApiBaseUrl,
+  }),
+});
+
 const createTaskDependencies = (context: GraphQLContext) => {
   return createTaskServiceDependencies({
     prisma: context.prisma,
     currentUserId: context.currentUserId,
+    weatherService,
   });
 };
 

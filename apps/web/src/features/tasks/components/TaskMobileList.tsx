@@ -40,9 +40,7 @@ export const TaskMobileList = ({
               <div className="task-mobile-list__meta">
                 {task.dueDateLabel ? <span>{task.dueDateLabel}</span> : null}
                 {task.note ? <span>Note: ({task.note})</span> : null}
-                {task.weatherLabel ? (
-                  <span>Weather: ({task.weatherLabel})</span>
-                ) : null}
+                {task.weatherLabel ? <span>Note: ({task.weatherLabel})</span> : null}
               </div>
             ) : null}
 

@@ -1,6 +1,7 @@
 import { Prisma } from "../generated/prisma/client.js";
 import type { prisma } from "../db/prisma.js";
 import { AppError, ERROR_CODES } from "../errors/index.js";
+import type { TaskWeatherFields } from "../weather/index.js";
 import type {
   ParsedCreateTaskInput,
   ParsedTaskFiltersInput,
@@ -33,6 +34,9 @@ export type TaskRecord = Prisma.TaskGetPayload<{
   select: typeof taskSelect;
 }>;
 
+type CreateTaskData = ParsedCreateTaskInput & Partial<TaskWeatherFields>;
+type UpdateTaskData = ParsedUpdateTaskInput & Partial<TaskWeatherFields>;
+
 export type TaskRepository = {
   findTasks: (
     userId: string,
@@ -40,7 +44,7 @@ export type TaskRepository = {
   ) => Promise<TaskRecord[]>;
   createTask: (
     userId: string,
-    input: ParsedCreateTaskInput,
+    input: CreateTaskData,
   ) => Promise<TaskRecord>;
   findActiveTaskById: (
     userId: string,
@@ -49,7 +53,7 @@ export type TaskRepository = {
   updateTask: (
     userId: string,
     taskId: string,
-    input: ParsedUpdateTaskInput,
+    input: UpdateTaskData,
   ) => Promise<TaskRecord>;
   softDeleteTask: (
     userId: string,
@@ -62,7 +66,7 @@ export type TaskRepository = {
 const createActiveTaskWhere = (
   userId: string,
   taskId: string,
-): Prisma.TaskWhereInput => {
+) => {
   return {
     id: taskId,
     userId,
@@ -70,43 +74,10 @@ const createActiveTaskWhere = (
   };
 };
 
-const createActiveTaskUniqueWhere = (
-  userId: string,
-  taskId: string,
-): Prisma.TaskWhereUniqueInput => {
-  return {
-    id: taskId,
-    userId,
-    deletedAt: null,
-  };
-};
-
-const createTaskUpdateData = (
-  input: ParsedUpdateTaskInput,
-): Prisma.TaskUpdateInput => {
-  const data: Prisma.TaskUpdateInput = {};
-
-  if (input.title !== undefined) {
-    data.title = input.title;
-  }
-
-  if (input.description !== undefined) {
-    data.description = input.description;
-  }
-
-  if (input.completed !== undefined) {
-    data.completed = input.completed;
-  }
-
-  if (input.dueDate !== undefined) {
-    data.dueDate = input.dueDate;
-  }
-
-  if (input.tags !== undefined) {
-    data.tags = input.tags;
-  }
-
-  return data;
+const createTaskUpdateData = (input: UpdateTaskData): Prisma.TaskUpdateInput => {
+  return Object.fromEntries(
+    Object.entries(input).filter(([, value]) => value !== undefined),
+  ) as Prisma.TaskUpdateInput;
 };
 
 const isPrismaRecordNotFoundError = (error: unknown): boolean => {
@@ -262,7 +233,7 @@ export const createTaskRepository = (
     updateTask: async (userId, taskId, input) => {
       try {
         return await prismaClient.task.update({
-          where: createActiveTaskUniqueWhere(userId, taskId),
+          where: createActiveTaskWhere(userId, taskId),
           data: createTaskUpdateData(input),
           select: taskSelect,
         });
@@ -273,7 +244,7 @@ export const createTaskRepository = (
     softDeleteTask: async (userId, taskId, deletedAt = new Date()) => {
       try {
         return await prismaClient.task.update({
-          where: createActiveTaskUniqueWhere(userId, taskId),
+          where: createActiveTaskWhere(userId, taskId),
           data: {
             deletedAt,
           },
@@ -298,21 +269,17 @@ export const createTaskRepository = (
 
           assertCompleteTaskOrder(tasks, taskIds);
 
-          const updatedTasks: TaskRecord[] = [];
-
-          for (const [order, taskId] of taskIds.entries()) {
-            updatedTasks.push(
-              await transaction.task.update({
-                where: createActiveTaskUniqueWhere(userId, taskId),
+          return Promise.all(
+            taskIds.map((taskId, order) => {
+              return transaction.task.update({
+                where: createActiveTaskWhere(userId, taskId),
                 data: {
                   order,
                 },
                 select: taskSelect,
-              }),
-            );
-          }
-
-          return updatedTasks;
+              });
+            }),
+          );
         });
       } catch (error) {
         return mapTaskNotFoundError(error);

@@ -20,7 +20,7 @@ describe("registerInputSchema", () => {
     });
   });
 
-  it("rejects invalid email addresses", () => {
+  it("rejects invalid register input", () => {
     expect(() =>
       registerInputSchema.parse({
         name: "Task Master",
@@ -28,9 +28,7 @@ describe("registerInputSchema", () => {
         password: "password123",
       }),
     ).toThrow("Enter a valid email address.");
-  });
 
-  it("rejects short names", () => {
     expect(() =>
       registerInputSchema.parse({
         name: "A",
@@ -38,9 +36,7 @@ describe("registerInputSchema", () => {
         password: "password123",
       }),
     ).toThrow("Name must be at least 2 characters.");
-  });
 
-  it("rejects short passwords", () => {
     expect(() =>
       registerInputSchema.parse({
         name: "Task Master",
@@ -64,16 +60,14 @@ describe("loginInputSchema", () => {
     });
   });
 
-  it("rejects invalid email addresses", () => {
+  it("rejects invalid login input", () => {
     expect(() =>
       loginInputSchema.parse({
         email: "not-an-email",
         password: "password123",
       }),
     ).toThrow("Enter a valid email address.");
-  });
 
-  it("rejects missing passwords", () => {
     expect(() =>
       loginInputSchema.parse({
         email: "user@example.com",

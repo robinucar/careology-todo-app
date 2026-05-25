@@ -1,4 +1,3 @@
-import type { Task } from '@careology/shared'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -6,51 +5,34 @@ import {
   createTaskSections,
   mapTaskToListItem,
 } from '../../../src/features/tasks/taskMappers'
-
-const createTask = (overrides: Partial<Task> & Pick<Task, 'id' | 'title'>): Task => {
-  const { id, title, ...rest } = overrides
-
-  return {
-    id,
-    title,
-    description: null,
-    completed: false,
-    dueDate: null,
-    tags: [],
-    order: 1,
-    weatherCity: null,
-    weatherTemperature: null,
-    weatherCondition: null,
-    weatherIconUrl: null,
-    weatherFetchedAt: null,
-    createdAt: '2026-05-25T00:00:00.000Z',
-    updatedAt: '2026-05-25T00:00:00.000Z',
-    ...rest,
-  }
-}
+import { createFutureDateIso, createFutureDateLabel } from '../../fixtures/dates'
+import { createTaskRecord } from '../../fixtures/tasks'
 
 describe('taskMappers', () => {
+  const futureDueDateIso = createFutureDateIso(61)
+  const futureDueDateLabel = createFutureDateLabel(61)
+
   it('splits tasks into todo and done sections sorted by order', () => {
     const sections = createTaskSections([
-      createTask({
+      createTaskRecord({
         id: 'done-later',
         title: 'Done later',
         completed: true,
         order: 4,
       }),
-      createTask({
+      createTaskRecord({
         id: 'todo-later',
         title: 'Todo later',
         completed: false,
         order: 3,
       }),
-      createTask({
+      createTaskRecord({
         id: 'done-first',
         title: 'Done first',
         completed: true,
         order: 1,
       }),
-      createTask({
+      createTaskRecord({
         id: 'todo-first',
         title: 'Todo first',
         completed: false,
@@ -71,19 +53,19 @@ describe('taskMappers', () => {
   it('maps task dates, descriptions, weather labels, and tags for the UI', () => {
     expect(
       mapTaskToListItem(
-        createTask({
+        createTaskRecord({
           id: 'task-1',
           title: 'Read a book',
           description: 'Bring notebook',
-          dueDate: '2026-07-25T00:00:00.000Z',
+          dueDate: futureDueDateIso,
           tags: ['high'],
           weatherTemperature: 30,
         }),
       ),
     ).toMatchObject({
       description: 'Bring notebook',
-      dueDate: '2026-07-25T00:00:00.000Z',
-      dueDateLabel: '25/07/26',
+      dueDate: futureDueDateIso,
+      dueDateLabel: futureDueDateLabel,
       note: 'Bring notebook',
       tag: {
         label: 'High',
@@ -95,18 +77,18 @@ describe('taskMappers', () => {
 
     expect(
       mapTaskToListItem(
-        createTask({
+        createTaskRecord({
           id: 'task-2',
           title: 'Plan trip to Tokyo',
           weatherCity: 'Tokyo',
           weatherTemperature: 30,
         }),
       ).weatherLabel,
-    ).toBe('Tokyo: ☼ 30 °C')
+    ).toBe('☼ 30 °C')
 
     expect(
       mapTaskToListItem(
-        createTask({
+        createTaskRecord({
           id: 'task-3',
           title: 'Buy groceries',
           tags: ['urgent'],
@@ -119,7 +101,7 @@ describe('taskMappers', () => {
 
     expect(
       mapTaskToListItem(
-        createTask({
+        createTaskRecord({
           id: 'task-4',
           title: 'Prepare meals',
           tags: ['not urgent'],

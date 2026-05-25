@@ -1,5 +1,9 @@
 import { requireCurrentUserId } from "../auth/requireCurrentUserId.js";
 import { AppError, ERROR_CODES } from "../errors/index.js";
+import type {
+  TaskWeatherFields,
+  WeatherService,
+} from "../weather/index.js";
 import type { TaskRecord, TaskRepository } from "./taskRepository.js";
 import {
   createTaskInputSchema,
@@ -10,9 +14,11 @@ import {
   type ParsedTaskFiltersInput,
   type ParsedUpdateTaskInput,
 } from "./taskValidation.js";
+import type { z } from "zod";
 
 export type TaskServiceDependencies = TaskRepository & {
   currentUserId: string | null;
+  weatherService?: WeatherService;
 };
 
 const createValidationError = (message: string, cause?: unknown) => {
@@ -31,21 +37,7 @@ const createTaskNotFoundError = () => {
 };
 
 const parseInput = <TOutput>(
-  schema: {
-    safeParse: (input: unknown) =>
-      | {
-          success: true;
-          data: TOutput;
-        }
-      | {
-          success: false;
-          error: {
-            issues: Array<{
-              message: string;
-            }>;
-          };
-        };
-  },
+  schema: z.ZodType<TOutput>,
   input: unknown,
 ): TOutput => {
   const result = schema.safeParse(input);
@@ -60,10 +52,6 @@ const parseInput = <TOutput>(
   return result.data;
 };
 
-const parseCreateTaskInput = (input: unknown): ParsedCreateTaskInput => {
-  return parseInput(createTaskInputSchema, input);
-};
-
 const parseUpdateTaskInput = (input: unknown): ParsedUpdateTaskInput => {
   const updateInput = parseInput(updateTaskInputSchema, input);
   const hasUpdateFields = Object.values(updateInput).some(
@@ -75,14 +63,6 @@ const parseUpdateTaskInput = (input: unknown): ParsedUpdateTaskInput => {
   }
 
   return updateInput;
-};
-
-const parseTaskFiltersInput = (input: unknown): ParsedTaskFiltersInput => {
-  return parseInput(taskFiltersInputSchema, input ?? {});
-};
-
-const parseReorderTaskIds = (input: unknown): string[] => {
-  return parseInput(reorderTaskIdsSchema, input);
 };
 
 const ensureActiveTaskExists = async (
@@ -99,12 +79,50 @@ const ensureActiveTaskExists = async (
   return task;
 };
 
+const clearedWeatherFields: TaskWeatherFields = {
+  weatherCity: null,
+  weatherTemperature: null,
+  weatherCondition: null,
+  weatherIconUrl: null,
+  weatherFetchedAt: null,
+};
+
+const getTaskWeather = async (
+  title: string,
+  weatherService: WeatherService | undefined,
+  dueDate: Date | null,
+  clearWhenMissing = false,
+): Promise<Partial<TaskWeatherFields>> => {
+  if (!weatherService) {
+    return {};
+  }
+
+  try {
+    const weather = await weatherService.getWeatherForTaskTitle(title, dueDate);
+
+    if (weather.status === "found") {
+      return weather.weather;
+    }
+
+    if (clearWhenMissing) {
+      return clearedWeatherFields;
+    }
+
+    return {};
+  } catch {
+    return clearWhenMissing ? clearedWeatherFields : {};
+  }
+};
+
 export const listTasks = async (
   input: unknown,
   dependencies: TaskServiceDependencies,
 ): Promise<TaskRecord[]> => {
   const userId = requireCurrentUserId(dependencies.currentUserId);
-  const filters = parseTaskFiltersInput(input);
+  const filters: ParsedTaskFiltersInput = parseInput(
+    taskFiltersInputSchema,
+    input ?? {},
+  );
 
   return dependencies.findTasks(userId, filters);
 };
@@ -114,9 +132,17 @@ export const createTask = async (
   dependencies: TaskServiceDependencies,
 ): Promise<TaskRecord> => {
   const userId = requireCurrentUserId(dependencies.currentUserId);
-  const taskInput = parseCreateTaskInput(input);
+  const taskInput: ParsedCreateTaskInput = parseInput(createTaskInputSchema, input);
+  const weather = await getTaskWeather(
+    taskInput.title,
+    dependencies.weatherService,
+    taskInput.dueDate,
+  );
 
-  return dependencies.createTask(userId, taskInput);
+  return dependencies.createTask(userId, {
+    ...taskInput,
+    ...weather,
+  });
 };
 
 export const updateTask = async (
@@ -127,9 +153,24 @@ export const updateTask = async (
   const userId = requireCurrentUserId(dependencies.currentUserId);
   const taskInput = parseUpdateTaskInput(input);
 
-  await ensureActiveTaskExists(userId, taskId, dependencies);
+  const existingTask = await ensureActiveTaskExists(userId, taskId, dependencies);
+  const weatherTitle = taskInput.title ?? existingTask.title;
+  const weatherDueDate =
+    taskInput.dueDate === undefined ? existingTask.dueDate : taskInput.dueDate;
+  const weather =
+    taskInput.title === undefined && taskInput.dueDate === undefined
+      ? {}
+      : await getTaskWeather(
+          weatherTitle,
+          dependencies.weatherService,
+          weatherDueDate,
+          true,
+        );
 
-  return dependencies.updateTask(userId, taskId, taskInput);
+  return dependencies.updateTask(userId, taskId, {
+    ...taskInput,
+    ...weather,
+  });
 };
 
 export const deleteTask = async (
@@ -148,7 +189,7 @@ export const reorderTasks = async (
   dependencies: TaskServiceDependencies,
 ): Promise<TaskRecord[]> => {
   const userId = requireCurrentUserId(dependencies.currentUserId);
-  const taskIds = parseReorderTaskIds(input);
+  const taskIds = parseInput(reorderTaskIdsSchema, input);
 
   return dependencies.reorderTasks(userId, taskIds);
 };
