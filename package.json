@@ -19,8 +19,13 @@
     "build:shared": "npm run build --workspace @careology/shared",
     "build": "npm run build:shared && npm run build --workspace @careology/api --workspace @careology/web --if-present --ignore-scripts",
     "typecheck": "npm run typecheck --workspace @careology/shared && npm run build:shared && npm run typecheck --workspace @careology/api --workspace @careology/web --if-present --ignore-scripts",
-    "lint": "npm run lint --workspace @careology/shared --workspace @careology/api --workspace @careology/web --if-present",
+    "lint": "npm run lint:e2e && npm run lint --workspace @careology/shared --workspace @careology/api --workspace @careology/web --if-present",
+    "lint:e2e": "eslint --config eslint.config.mjs playwright.config.ts tests/e2e",
     "test": "npm run build:shared && npm run test --workspace @careology/api --workspace @careology/web --if-present --ignore-scripts",
-    "test:db": "npm run build:shared && npm run db:deploy --workspace @careology/api && npm run test:db --workspace @careology/api --ignore-scripts"
+    "test:db": "npm run build:shared && npm run db:deploy --workspace @careology/api && npm run test:db --workspace @careology/api --ignore-scripts",
+    "test:e2e": "npm run build:shared && npm run db:deploy --workspace @careology/api && npm run db:generate --workspace @careology/api && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
   }
 }

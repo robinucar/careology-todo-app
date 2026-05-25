@@ -77,6 +77,7 @@ npm run db:generate --workspace @careology/api
 npm run typecheck
 npm run lint
 npm run test
+npm run test:e2e
 npm run build
 ```
 
