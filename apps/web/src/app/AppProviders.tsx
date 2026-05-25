@@ -9,7 +9,7 @@ type AppProvidersProps = {
   children: ReactNode
 }
 
-export function AppProviders({ children }: AppProvidersProps) {
+export const AppProviders = ({ children }: AppProvidersProps) => {
   return (
     <ApolloProvider client={apolloClient}>
       <ThemeProvider theme={appTheme}>

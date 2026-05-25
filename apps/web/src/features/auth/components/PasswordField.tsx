@@ -8,10 +8,10 @@ type PasswordFieldProps = Omit<TextFieldProps, 'label' | 'type'> & {
   label: string
 }
 
-export function PasswordField({
+export const PasswordField = ({
   slotProps,
   ...textFieldProps
-}: PasswordFieldProps) {
+}: PasswordFieldProps) => {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const inputSlotProps = typeof slotProps?.input === 'object' ? slotProps.input : undefined
   const existingEndAdornment = inputSlotProps && 'endAdornment' in inputSlotProps

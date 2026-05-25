@@ -15,11 +15,11 @@ type RegisterFormProps = {
   onSubmit: (values: RegisterFormValues) => void | Promise<void>
 }
 
-export function RegisterForm({
+export const RegisterForm = ({
   isSubmitting = false,
   onLoginClick,
   onSubmit,
-}: RegisterFormProps) {
+}: RegisterFormProps) => {
   const {
     formState: { errors },
     handleSubmit,
@@ -46,7 +46,9 @@ export function RegisterForm({
           >
             Sign up to
           </Typography>
-          <Typography className="auth-subtitle">get things done ✨</Typography>
+          <Typography aria-hidden="true" className="auth-subtitle">
+            get things done ✨
+          </Typography>
         </Box>
 
         <Stack spacing={2.25}>

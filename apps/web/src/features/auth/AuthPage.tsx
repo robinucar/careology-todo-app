@@ -36,7 +36,7 @@ type AuthNotice = {
   severity: 'error' | 'info' | 'success'
 }
 
-export function AuthPage() {
+export const AuthPage = () => {
   const apolloClient = useApolloClient()
   const [authMode, setAuthMode] = useState<AuthMode>('login')
   const [authNotice, setAuthNotice] = useState<AuthNotice | null>(null)
