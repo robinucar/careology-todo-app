@@ -12,6 +12,7 @@ const apiUrl = process.env.E2E_API_URL ?? `http://127.0.0.1:${apiPort}/`
 const weatherApiUrl =
   process.env.E2E_WEATHER_API_URL ?? `http://127.0.0.1:${weatherApiPort}/v1`
 const webUrl = process.env.E2E_WEB_URL ?? `http://127.0.0.1:${webPort}`
+const apiGraphqlUrl = `${apiUrl.replace(/\/$/, '')}/graphql`
 
 export default defineConfig({
   expect: {
@@ -45,12 +46,12 @@ export default defineConfig({
         WEATHER_API_KEY: 'e2e-weather-api-key',
       },
       reuseExistingServer: !process.env.CI,
-      url: apiUrl,
+      url: apiGraphqlUrl,
     },
     {
       command: `npm run dev --workspace @careology/web -- --host 127.0.0.1 --port ${webPort}`,
       env: {
-        VITE_GRAPHQL_URL: apiUrl,
+        VITE_GRAPHQL_URL: apiGraphqlUrl,
       },
       reuseExistingServer: !process.env.CI,
       url: webUrl,

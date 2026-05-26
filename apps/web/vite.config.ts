@@ -53,6 +53,11 @@ export default defineConfig(({ command }) => {
       },
     },
     plugins: [react()],
+    server: {
+      proxy: {
+        '/graphql': 'http://localhost:4000',
+      },
+    },
     ...(useSharedSource
       ? {
           optimizeDeps: {

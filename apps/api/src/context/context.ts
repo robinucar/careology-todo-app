@@ -1,4 +1,4 @@
-import type { StandaloneServerContextFunctionArgument } from "@apollo/server/standalone";
+import type { IncomingHttpHeaders } from "node:http";
 
 import { getCurrentUserIdFromAuthorizationHeader } from "../auth/authHeader.js";
 import { env } from "../config/env.js";
@@ -10,7 +10,13 @@ export type GraphQLContext = {
   currentUserId: string | null;
 };
 
-type CreateContextArgs = Partial<StandaloneServerContextFunctionArgument>;
+type ContextRequest = {
+  headers: Pick<IncomingHttpHeaders, "authorization">;
+};
+
+type CreateContextArgs = {
+  req?: ContextRequest;
+};
 
 export const createContext = async ({
   req,

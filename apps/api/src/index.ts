@@ -1,18 +1,27 @@
 import "dotenv/config";
 
-import { startStandaloneServer } from "@apollo/server/standalone";
-
 import { env } from "./config/env.js";
-import { createContext } from "./context/context.js";
 import { createGraphQLServer } from "./graphql/server.js";
+import { createHttpApp } from "./http/app.js";
 
-const server = createGraphQLServer();
+const graphqlServer = createGraphQLServer();
+await graphqlServer.start();
 
-const { url } = await startStandaloneServer(server, {
-  listen: {
-    port: env.port,
-  },
-  context: createContext,
+const app = createHttpApp({
+  graphqlServer,
 });
 
-console.log(`API server ready at ${url}`);
+const httpServer = app.listen(env.port);
+
+const shutdown = async () => {
+  httpServer.close();
+  await graphqlServer.stop();
+};
+
+process.once("SIGINT", () => {
+  void shutdown();
+});
+
+process.once("SIGTERM", () => {
+  void shutdown();
+});
