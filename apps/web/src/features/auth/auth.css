@@ -145,7 +145,7 @@
   display: grid;
   place-items: center;
   gap: 12px;
-  color: var(--color-text-primary);
+  color: var(--color-text);
   font-weight: 600;
 }
 
