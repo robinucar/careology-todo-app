@@ -140,6 +140,15 @@
   height: auto;
 }
 
+.auth-loading-state {
+  min-height: 100svh;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
 .authenticated-page {
   min-height: 100svh;
   background: var(--color-background);
