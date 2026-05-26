@@ -1,6 +1,6 @@
-import { Alert } from '@mui/material'
+import { Alert, CircularProgress } from '@mui/material'
 import { useApolloClient, useMutation } from '@apollo/client/react'
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 
 import type { AuthSession } from '../../app/authSession'
 import {
@@ -25,7 +25,6 @@ import type {
   RegisterMutationData,
   RegisterMutationVariables,
 } from './authTypes'
-import { AuthenticatedApp } from './components/AuthenticatedApp'
 import { AuthLayout } from './components/AuthLayout'
 import { LoginForm } from './components/LoginForm'
 import { RegisterForm } from './components/RegisterForm'
@@ -35,6 +34,12 @@ type AuthNotice = {
   message: string
   severity: 'error' | 'info' | 'success'
 }
+
+const AuthenticatedApp = lazy(async () => {
+  const module = await import('./components/AuthenticatedApp')
+
+  return { default: module.AuthenticatedApp }
+})
 
 export const AuthPage = () => {
   const apolloClient = useApolloClient()
@@ -153,11 +158,20 @@ export const AuthPage = () => {
 
   if (authSession) {
     return (
-      <AuthenticatedApp
-        isLoggingOut={isLoggingOut}
-        onLogout={handleLogout}
-        session={authSession}
-      />
+      <Suspense
+        fallback={
+          <div className="auth-loading-state" role="status">
+            <CircularProgress size={24} />
+            <span>Loading your tasks...</span>
+          </div>
+        }
+      >
+        <AuthenticatedApp
+          isLoggingOut={isLoggingOut}
+          onLogout={handleLogout}
+          session={authSession}
+        />
+      </Suspense>
     )
   }
 
