@@ -1,4 +1,4 @@
-# System Design
+# Pre-Implementation System Design
 
 ## Overview
 
@@ -6,13 +6,7 @@ This project is a full-stack todo app for the Careology technical test.
 
 The system is designed as a simple client-server application with a React frontend, a Node.js GraphQL backend, and a PostgreSQL database.
 
-```mermaid
-flowchart LR
-  User[User] --> Web[React Frontend]
-  Web --> API[Node.js GraphQL API]
-  API --> DB[(PostgreSQL)]
-  API --> Weather[WeatherAPI]
-```
+At a high level, the user interacts with the React frontend, the frontend calls the Node.js GraphQL API, and the API persists data in PostgreSQL. When a task contains a city name, the API also calls WeatherAPI to enrich the task with weather data.
 
 ## Key Decisions
 
