@@ -1,25 +1,27 @@
 import { createTheme } from '@mui/material/styles'
 
+import { appColors, appFonts, appRadii } from './designTokens'
+
 export const appTheme = createTheme({
   palette: {
     background: {
-      default: '#ffffff',
-      paper: '#ffffff',
+      default: appColors.background,
+      paper: appColors.background,
     },
     primary: {
-      main: '#00805F',
-      contrastText: '#ffffff',
+      main: appColors.primary,
+      contrastText: appColors.white,
     },
     text: {
-      primary: '#20262a',
-      secondary: '#5f6870',
+      primary: appColors.text,
+      secondary: appColors.textMuted,
     },
   },
   shape: {
-    borderRadius: 6,
+    borderRadius: appRadii.default,
   },
   typography: {
-    fontFamily: '"Poppins", "Avenir Next", "Helvetica Neue", sans-serif',
+    fontFamily: appFonts.body,
     h1: {
       fontWeight: 800,
       letterSpacing: '-0.04em',

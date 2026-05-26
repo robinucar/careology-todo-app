@@ -11,13 +11,13 @@
 }
 
 .task-board {
-  --task-accent: #00c495;
-  --task-accent-dark: #00785f;
-  --task-border: #dde3e6;
-  --task-control-border: #70797f;
-  --task-focus-ring: rgba(0, 120, 95, 0.32);
-  --task-text: #20262a;
-  --task-muted: #647078;
+  --task-accent: var(--color-accent);
+  --task-accent-dark: var(--color-primary-dark);
+  --task-border: var(--color-border);
+  --task-control-border: var(--color-border-strong);
+  --task-focus-ring: var(--focus-ring-primary);
+  --task-text: var(--color-text);
+  --task-muted: var(--color-text-secondary);
 
   color: var(--task-text);
 }
@@ -33,7 +33,7 @@
   width: min(520px, 100%);
   margin: 0;
   color: var(--task-text);
-  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-body);
   font-size: 30px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -59,8 +59,8 @@
   padding: 0 14px;
   border: 1px solid var(--task-control-border);
   border-radius: 5px;
-  color: #050505;
-  background: #fff;
+  color: var(--color-text-black);
+  background: var(--color-surface);
 }
 
 .task-search:focus-within {
@@ -80,13 +80,13 @@
   padding: 0;
   border: 0;
   outline: 0;
-  color: #171d20;
+  color: var(--color-text-input);
   background: transparent;
   font-size: 15px;
 }
 
 .task-search input::placeholder {
-  color: #171d20;
+  color: var(--color-text-input);
   opacity: 1;
 }
 
@@ -95,16 +95,16 @@
   height: 37px;
   gap: 7px;
   padding: 0 13px;
-  border-color: #000;
+  border-color: var(--color-text-black);
   border-radius: 5px;
-  color: #111;
+  color: var(--color-text-dark);
   font-size: 14px;
   font-weight: 500;
 }
 
 .task-logout-button.MuiButton-root:hover {
-  border-color: #000;
-  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--color-text-black);
+  background: var(--color-hover-subtle);
 }
 
 .task-logout-button.MuiButton-root:focus-visible,
@@ -126,14 +126,14 @@
   border-radius: 5px;
   background: var(--task-accent-dark);
   box-shadow: none;
-  color: #fff;
+  color: var(--color-surface);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0;
 }
 
 .task-add-button.MuiButton-root:hover {
-  background: #006f58;
+  background: var(--color-primary-hover);
   box-shadow: none;
 }
 
@@ -191,7 +191,7 @@
 .task-section__chevron {
   width: 17px;
   height: 17px;
-  color: #5f6c72;
+  color: var(--color-text-muted);
   transition: transform 0.16s ease;
 }
 
@@ -205,7 +205,7 @@
   border: 1px solid var(--task-border);
   border-radius: 4px;
   color: var(--task-muted);
-  background: #fff;
+  background: var(--color-surface);
 }
 
 @media (max-width: 760px) {

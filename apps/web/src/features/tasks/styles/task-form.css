@@ -4,8 +4,8 @@
   padding: 18px;
   border: 1px solid var(--task-border);
   border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
 }
 
 .task-create-form {
@@ -51,7 +51,7 @@
 
 .task-create-form__field label,
 .task-create-form__label-row label {
-  color: #111;
+  color: var(--color-text-dark);
   font-size: 13px;
   font-weight: 600;
 }
@@ -63,7 +63,7 @@
 
 .task-create-form__label-row .task-create-form__required {
   margin-left: 4px;
-  color: #b3261e;
+  color: var(--color-danger);
 }
 
 .task-create-form__label-row {
@@ -85,9 +85,9 @@
   width: 100%;
   border: 1px solid var(--task-control-border);
   border-radius: 6px;
-  color: #171d20;
+  color: var(--color-text-input);
   outline: 0;
-  background: #fff;
+  background: var(--color-surface);
   font-size: 14px;
   font-family: inherit;
   transition:
@@ -117,18 +117,18 @@
 .task-create-form input[aria-invalid='true'],
 .task-create-form select[aria-invalid='true'],
 .task-create-form textarea[aria-invalid='true'] {
-  border-color: #b3261e;
+  border-color: var(--color-danger);
 }
 
 .task-create-form input[aria-invalid='true']:focus,
 .task-create-form select[aria-invalid='true']:focus,
 .task-create-form textarea[aria-invalid='true']:focus {
-  box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.22);
+  box-shadow: 0 0 0 3px var(--focus-ring-danger);
 }
 
 .task-create-form input::placeholder,
 .task-create-form textarea::placeholder {
-  color: #70797f;
+  color: var(--color-border-strong);
   opacity: 1;
 }
 
@@ -152,12 +152,12 @@
 .task-create-form__submit {
   border-color: var(--task-accent-dark);
   background: var(--task-accent-dark);
-  color: #fff;
+  color: var(--color-surface);
 }
 
 .task-create-form__cancel {
-  background: #fff;
-  color: #111;
+  background: var(--color-surface);
+  color: var(--color-text-dark);
 }
 
 .task-create-form__actions button:hover:not(:disabled) {
@@ -171,7 +171,7 @@
 
 .task-create-form__error {
   margin: -1px 0 0;
-  color: #8f1d18;
+  color: var(--color-danger-text);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.35;

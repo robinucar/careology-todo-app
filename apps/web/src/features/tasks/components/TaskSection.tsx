@@ -15,6 +15,7 @@ import {
 import useMediaQuery from '@mui/material/useMediaQuery'
 import { useState } from 'react'
 
+import { appBreakpoints } from '../../../app/designTokens'
 import type { TaskListItem, TaskSectionKey } from '../taskTypes'
 import { ChevronDownIcon } from './TaskIcons'
 import { TaskEmptyState } from './TaskEmptyState'
@@ -37,8 +38,6 @@ type TaskSectionProps = {
   tasks: TaskListItem[]
 }
 
-const mobileTaskLayoutQuery = '(max-width: 760px)'
-
 export const TaskSection = ({
   disabled = false,
   isReorderDisabled = false,
@@ -51,7 +50,9 @@ export const TaskSection = ({
   tasks,
 }: TaskSectionProps) => {
   const [isExpanded, setIsExpanded] = useState(true)
-  const isMobileLayout = useMediaQuery(mobileTaskLayoutQuery, { noSsr: true })
+  const isMobileLayout = useMediaQuery(appBreakpoints.taskMobileQuery, {
+    noSsr: true,
+  })
   const hasTasks = tasks.length > 0
   const headingId = label.toLowerCase().replaceAll(' ', '-')
   const contentId = `${headingId}-content`

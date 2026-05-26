@@ -1,13 +1,13 @@
 .auth-page {
   min-height: 100svh;
   padding: 38px 42px;
-  background: #ffffff;
+  background: var(--color-background);
 }
 
 .auth-page .auth-brand {
   margin: 0;
-  color: #000;
-  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  color: var(--color-text-black);
+  font-family: var(--font-body);
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0;
@@ -27,21 +27,21 @@
   width: min(495px, 100%);
   min-height: 595px;
   padding: 44px 36px;
-  border: 1px solid #babfc3;
+  border: 1px solid var(--color-border-auth);
   border-radius: 6px;
-  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
 }
 
 .auth-card .auth-welcome {
-  color: #14191c;
+  color: var(--color-text-input);
   font-size: 1.55rem;
   line-height: 1.2;
 }
 
 .auth-card .auth-title {
   margin: 0;
-  color: #070707;
-  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  color: var(--color-text-black);
+  font-family: var(--font-body);
   font-size: 31px;
   font-weight: 700;
   letter-spacing: 0;
@@ -50,13 +50,13 @@
 
 .auth-card .auth-subtitle {
   margin-top: 6px;
-  color: #14191c;
+  color: var(--color-text-input);
   font-size: 1.05rem;
 }
 
 .auth-card .auth-field-label {
-  color: #000;
-  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  color: var(--color-text-black);
+  font-family: var(--font-body);
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0;
@@ -69,26 +69,26 @@
 }
 
 .auth-card .MuiOutlinedInput-notchedOutline {
-  border-color: #70797f;
+  border-color: var(--color-border-strong);
 }
 
 .auth-card .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
-  border-color: #4f5a60;
+  border-color: var(--color-border-hover);
   border-width: 1px;
 }
 
 .auth-card .MuiOutlinedInput-root.Mui-focused {
-  box-shadow: 0 0 0 3px rgba(0, 120, 95, 0.28);
+  box-shadow: 0 0 0 3px var(--focus-ring-primary-soft);
 }
 
 .auth-card .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: #00785f;
+  border-color: var(--color-primary-dark);
   border-width: 2px;
 }
 
 .auth-card .MuiInputBase-input {
-  color: #5f6870;
-  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  color: var(--color-text-muted);
+  font-family: var(--font-control);
   font-size: 14px;
   font-weight: 400;
   letter-spacing: 0;
@@ -97,7 +97,7 @@
 }
 
 .auth-card .MuiInputBase-input::placeholder {
-  color: #5f6870;
+  color: var(--color-text-muted);
   opacity: 1;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .auth-card .MuiLink-root {
-  color: #00805F;
+  color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -125,7 +125,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #5f6870;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
 }
 
@@ -142,7 +142,7 @@
 
 .authenticated-page {
   min-height: 100svh;
-  background: #ffffff;
+  background: var(--color-background);
 }
 
 .authenticated-header {
@@ -151,13 +151,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: #000;
-  color: #fff;
+  background: var(--color-text-black);
+  color: var(--color-surface);
 }
 
 .authenticated-header .authenticated-brand {
   margin: 0;
-  font-family: Poppins, 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-body);
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0;
@@ -172,7 +172,7 @@
   justify-content: center;
   gap: 6px;
   padding: 0;
-  color: #fff;
+  color: var(--color-surface);
 }
 
 .authenticated-menu-button > span[aria-hidden='true'] {

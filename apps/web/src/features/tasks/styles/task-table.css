@@ -2,8 +2,8 @@
   overflow: hidden;
   border: 1px solid var(--task-border);
   border-radius: 4px;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-table);
 }
 
 .task-table {
@@ -27,24 +27,24 @@
 }
 
 .task-table th {
-  color: #363d41;
+  color: var(--color-text);
   font-weight: 400;
 }
 
 .task-table td {
-  color: #111;
+  color: var(--color-text-dark);
   font-weight: 400;
 }
 
 .task-table .is-completed td {
-  color: #5f6870;
+  color: var(--color-text-muted);
 }
 
 .task-table .is-dragging td {
   position: relative;
   z-index: 1;
-  background: #fff;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-dragging);
 }
 
 .task-table__status {
@@ -65,7 +65,7 @@
 
 .task-table__note {
   width: 16%;
-  color: #555f66;
+  color: var(--color-text-muted);
 }
 
 .task-table__actions {
@@ -83,7 +83,7 @@
   width: 15px;
   height: 15px;
   margin-right: 10px;
-  color: #1c2225;
+  color: var(--color-text);
   vertical-align: -3px;
 }
 
@@ -92,7 +92,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 9px;
-  color: #5c676d;
+  color: var(--color-icon-muted);
 }
 
 .task-table__note-stack {
@@ -108,13 +108,13 @@
   place-content: center;
   padding: 0;
   border: 0;
-  color: #5c676d;
+  color: var(--color-icon-muted);
   background: transparent;
   cursor: pointer;
 }
 
 .task-icon-button:hover:not(:disabled) {
-  color: #111;
+  color: var(--color-text-dark);
 }
 
 .task-icon-button:disabled {
@@ -140,14 +140,14 @@
   place-content: center;
   padding: 0;
   border: 0;
-  color: #5c676d;
+  color: var(--color-icon-muted);
   background: transparent;
   cursor: grab;
   touch-action: none;
 }
 
 .task-drag-handle:hover:not(:disabled) {
-  color: #111;
+  color: var(--color-text-dark);
 }
 
 .task-drag-handle:active:not(:disabled) {
@@ -176,21 +176,21 @@
   display: inline-grid;
   place-content: center;
   appearance: none;
-  border: 1px solid #111;
+  border: 1px solid var(--color-text-dark);
   border-radius: 2px;
-  background: #fff;
-  color: #000;
+  background: var(--color-surface);
+  color: var(--color-text-black);
   vertical-align: middle;
 }
 
 .task-status-checkbox:checked {
-  border-color: #00805f;
+  border-color: var(--color-primary);
   background: var(--task-accent);
 }
 
 .task-status-checkbox:checked::before {
   content: '✓';
-  color: #000;
+  color: var(--color-text-black);
   font-size: 13px;
   line-height: 1;
 }
@@ -207,7 +207,7 @@
   justify-content: center;
   padding: 2px 11px;
   border-radius: 4px;
-  color: #111;
+  color: var(--color-text-dark);
   font-size: 12px;
   line-height: 16px;
 }
@@ -215,19 +215,19 @@
 .task-tag--default,
 .task-tag--low,
 .task-tag--notUrgent {
-  background: #e2e2e2;
+  background: var(--color-tag-neutral);
 }
 
 .task-tag--medium {
-  background: #ffe89a;
+  background: var(--color-tag-medium);
 }
 
 .task-tag--urgent {
-  background: #ffdda3;
+  background: var(--color-tag-urgent);
 }
 
 .task-tag--high {
-  background: #ffa1cf;
+  background: var(--color-tag-high);
 }
 
 @media (max-width: 760px) {

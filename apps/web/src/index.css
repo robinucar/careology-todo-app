@@ -1,9 +1,41 @@
 :root {
   --font-body: Poppins, "Avenir Next", "Helvetica Neue", sans-serif;
+  --font-control: Roboto, "Helvetica Neue", sans-serif;
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-text: #20262a;
+  --color-text-black: #000000;
+  --color-text-dark: #111111;
+  --color-text-input: #171d20;
+  --color-text-muted: #5f6870;
+  --color-text-secondary: #647078;
+  --color-border: #dde3e6;
+  --color-border-auth: #babfc3;
+  --color-border-hover: #4f5a60;
+  --color-border-strong: #70797f;
+  --color-primary: #00805f;
+  --color-primary-dark: #00785f;
+  --color-primary-hover: #006f58;
+  --color-accent: #00c495;
+  --color-danger: #b3261e;
+  --color-danger-text: #8f1d18;
+  --color-hover-subtle: rgba(0, 0, 0, 0.04);
+  --color-icon-muted: #5c676d;
+  --color-tag-neutral: #e2e2e2;
+  --color-tag-medium: #ffe89a;
+  --color-tag-urgent: #ffdda3;
+  --color-tag-high: #ffa1cf;
+  --focus-ring-primary: rgba(0, 120, 95, 0.32);
+  --focus-ring-primary-soft: rgba(0, 120, 95, 0.28);
+  --focus-ring-danger: rgba(179, 38, 30, 0.22);
+  --shadow-card: 0 22px 55px rgba(0, 0, 0, 0.08);
+  --shadow-panel: 0 8px 24px rgba(0, 0, 0, 0.07);
+  --shadow-table: 0 4px 12px rgba(0, 0, 0, 0.07);
+  --shadow-dragging: 0 8px 18px rgba(0, 0, 0, 0.12);
 
   font: 16px/1.5 var(--font-body);
-  color: #20262a;
-  background: #ffffff;
+  color: var(--color-text);
+  background: var(--color-background);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -27,4 +59,15 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms;
+    animation-iteration-count: 1;
+    scroll-behavior: auto;
+    transition-duration: 0.01ms;
+  }
 }
