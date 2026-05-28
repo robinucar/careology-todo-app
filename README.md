@@ -26,6 +26,26 @@ Live app: http://careology-todo-app.eu-west-2.elasticbeanstalk.com/
 - Show toast notifications for user feedback
 - Keep each user's tasks private
 
+## User Stories
+
+- As a new user, I want to create an account so that I can manage my own tasks.
+- As a registered user, I want to log in so that I can access my personal todo list.
+- As an authenticated user, I want to log out so that I can safely end my session.
+- As an authenticated user, I want to see only my own tasks so that my data stays private.
+- As an authenticated user, I want to create a task so that I can track something I need to do.
+- As an authenticated user, I want to edit a task so that I can correct or update its details.
+- As an authenticated user, I want to delete a task so that I can remove work I no longer need to track.
+- As an authenticated user, I want to mark a task as done or undone so that I can track my progress.
+- As an authenticated user, I want tasks with city names to show weather information so that I can consider local conditions.
+- As an authenticated user, I want the app to use the first detected city name in a task for weather lookup so that weather results are predictable.
+- As an authenticated user, I want to see helpful feedback if weather data cannot be loaded so that I understand what happened.
+- As an authenticated user, I want to assign due dates to tasks so that I can plan my work.
+- As an authenticated user, I want to add tags to tasks so that I can group related work.
+- As an authenticated user, I want to search tasks by title, description, and tags so that I can quickly find relevant work.
+- As an authenticated user, I want to reorder tasks with drag and drop so that I can set my preferred order.
+- As an authenticated user, I want reordered tasks to stay in the same order after refresh so that my list remains consistent.
+- As an authenticated user, I want to receive toast notifications so that I get clear feedback after actions.
+
 ## Tech Stack
 
 - React
@@ -53,6 +73,34 @@ Prerequisites:
 - npm
 - Docker and Docker Compose
 
+Quick start:
+
+```bash
+npm install
+cp apps/api/.env.example apps/api/.env
+docker compose up -d postgres
+npm run db:generate --workspace @careology/api
+npm run db:deploy --workspace @careology/api
+```
+
+Then start the API and web app in separate terminals:
+
+```bash
+npm run dev --workspace @careology/api
+```
+
+```bash
+npm run dev --workspace @careology/web
+```
+
+Open the local app at:
+
+```text
+http://localhost:5173
+```
+
+Detailed setup notes are below.
+
 Install dependencies:
 
 ```bash
@@ -65,7 +113,9 @@ Create the API environment file:
 cp apps/api/.env.example apps/api/.env
 ```
 
-Update `apps/api/.env` with a local `JWT_SECRET` and, if you want live weather data locally, a `WEATHER_API_KEY`.
+Update `apps/api/.env` with a local `JWT_SECRET`.
+
+`WEATHER_API_KEY` is optional for local setup. If it is empty, the app still runs, but tasks will not show live weather data locally.
 
 Start PostgreSQL:
 
@@ -82,7 +132,7 @@ npm run db:generate --workspace @careology/api
 npm run db:deploy --workspace @careology/api
 ```
 
-Start the API:
+Start the API in the first terminal:
 
 ```bash
 npm run dev --workspace @careology/api
@@ -119,11 +169,15 @@ Run database-backed tests:
 npm run test:db
 ```
 
+This command requires the local PostgreSQL container to be running.
+
 Run browser tests:
 
 ```bash
 npm run test:e2e
 ```
+
+This command starts the API, web app, and mocked weather API through Playwright. It also requires the local PostgreSQL container to be running.
 
 ## Database
 
